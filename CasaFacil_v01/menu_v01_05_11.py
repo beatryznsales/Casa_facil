@@ -3,7 +3,7 @@ import datetime
 import os
 import sqlite3
 
-basedados = 'casa_facil.db' #oi
+basedados = r"C:\Users\TTT\Desktop\Casa_facil\CasaFacil_v01\casa_facil.db"  # colocar cominho relativo
 
 
 #####################################     DEFINIÇÃO DAS FUNÇÕES     ############################################################################################################################
@@ -320,7 +320,7 @@ def menu_principal():
     # Menu principal da aplicação - o utilizador fica no menu principal até escolher a opção de sair da aplicação.
     # Permite escolher entre a gestão de imóveis, inquilinos e proprietários, ou sair da aplicação.
     
-    os.system('cls')
+    #os.system('cls')
     
     while True:
         print("\n" + "=" * 40)
@@ -358,7 +358,7 @@ def menu_principal():
 
 def menu_imoveis():
     while True:
-        os.system('cls')  # limpar o terminar
+        #os.system('cls')  # limpar o terminar
         print("\n" + "=" * 40)
         print("\n--- GESTÃO DE IMÓVEIS ---")
         print("=" * 40)
