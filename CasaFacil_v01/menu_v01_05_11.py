@@ -3,7 +3,7 @@ import datetime
 import os
 import sqlite3
 
-basedados = 'casa_facil.db'
+basedados = 'casa_facil.db' #oi
 
 
 #####################################     DEFINIÇÃO DAS FUNÇÕES     ############################################################################################################################
