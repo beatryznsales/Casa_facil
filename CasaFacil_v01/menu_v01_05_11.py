@@ -1,10 +1,18 @@
 
+
 import datetime
 import os
 import sqlite3
 
-basedados = r"C:\Users\TTT\Desktop\Casa_facil\CasaFacil_v01\casa_facil.db"  # colocar cominho relativo
+# Obter o caminho completo da pasta onde o programa está guardado.
+# __file__ identifica o ficheiro Python em execução.
+# os.path.abspath() obtém o caminho absoluto desse ficheiro.
+# os.path.dirname() devolve a pasta onde o ficheiro está guardado.
+pasta_programa = os.path.dirname(os.path.abspath(__file__))
 
+# Construir o caminho da base de dados na pasta do programa.
+# os.path.join() junta o caminho da pasta ao nome do ficheiro.
+base_de_dados = os.path.join(pasta_programa, "casa_facil.db")
 
 #####################################     DEFINIÇÃO DAS FUNÇÕES     ############################################################################################################################
 
@@ -53,7 +61,7 @@ def adicionar_imovel():       # Colocar limites para que em "Rua" não seja poss
  
     # 3. Inserir na Base de Dados
     try:
-        conexao = sqlite3.connect(basedados)
+        conexao = sqlite3.connect(base_de_dados)
         cursor = conexao.cursor()
        
         # Verificar se o proprietário existe antes de associar o imóvel
@@ -88,7 +96,7 @@ def adicionar_imovel():       # Colocar limites para que em "Rua" não seja poss
 
 def consultar_imoveis():   ### ATENCAO: melhorar a consulta com JOIN para mostrar os detalhes da morada, do inquilino e do proprietário, em vez de apenas os IDs. ###
     # Estabelecer ligação à base de dados.
-    conexao = sqlite3.connect(basedados)
+    conexao = sqlite3.connect(base_de_dados)
     cursor = conexao.cursor()
 
     try:
@@ -156,7 +164,7 @@ def adicionar_proprietario():
     num_habitacoes = 0
 
     try:
-        conexao = sqlite3.connect(basedados)
+        conexao = sqlite3.connect(base_de_dados)
         cursor = conexao.cursor()
 
         # Inserir os dados na tabela de proprietários.
@@ -184,7 +192,7 @@ def adicionar_proprietario():
 
 def consultar_proprietarios():
     # Consultar os proprietários registados na base de dados.
-    conexao = sqlite3.connect(basedados)
+    conexao = sqlite3.connect(base_de_dados)
     cursor = conexao.cursor()
 
     try:
@@ -253,7 +261,7 @@ def adicionar_inquilino():
             print("Introduza um valor numérico válido.")
 
     try:
-        conexao = sqlite3.connect(basedados)
+        conexao = sqlite3.connect(base_de_dados)
         cursor = conexao.cursor()
 
         # Inserir os dados na tabela de inquilinos.
@@ -282,7 +290,7 @@ def adicionar_inquilino():
 
 def consultar_inquilinos():
     # Consultar todos os inquilinos registados.
-    conexao = sqlite3.connect(basedados)
+    conexao = sqlite3.connect(base_de_dados)
     cursor = conexao.cursor()
 
     try:
