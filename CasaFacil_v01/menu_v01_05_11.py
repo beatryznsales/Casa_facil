@@ -5,6 +5,7 @@ import os
 import sqlite3
 
 # Obter o caminho completo da pasta onde o programa está guardado.
+
 # __file__ identifica o ficheiro Python em execução.
 # os.path.abspath() obtém o caminho absoluto desse ficheiro.
 # os.path.dirname() devolve a pasta onde o ficheiro está guardado.
