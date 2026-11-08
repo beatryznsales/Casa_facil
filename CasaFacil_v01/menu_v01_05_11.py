@@ -3,7 +3,7 @@
 import datetime
 import os
 import sqlite3
-
+import math
 # Obter o caminho completo da pasta onde o programa está guardado.
 
 # __file__ identifica o ficheiro Python em execução.
