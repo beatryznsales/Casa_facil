@@ -5,7 +5,7 @@
 ## Editar informações: Permitir editar os dados das tabelas para as 3 entidades
 ## Adicionar erros LOG
 
-# Para honenumbers e questionary, deve-se preparar um ficheiro requirements.txt para facilitar a instalação dessas dependências nos computadores externos
+# Para phonenumbers e questionary, deve-se preparar um ficheiro requirements.txt para facilitar a instalação dessas dependências nos computadores externos
 
 import phonenumbers
 import datetime
@@ -823,10 +823,7 @@ def adicionar_inquilino():
         sexo = input("Sexo (Masculino (M)/Feminino (F)/Outro (O)): ").strip().upper()
 
         # Verificar se a opção introduzida é válida
-        if sexo not in ["MASCULINO", "FEMININO", "OUTRO",
-                        "MASCULINO (M)", "FEMININO (F)", "OUTRO (O)",
-                        "MASCULINO(M)", "FEMININO(F)", "OUTRO(O)",
-                        "M", "F", "O"]:
+        if sexo not in ["MASCULINO", "FEMININO", "OUTRO", "MASCULINO (M)", "FEMININO (F)", "OUTRO (O)", "MASCULINO(M)", "FEMININO(F)", "OUTRO(O)", "M", "F", "O"]:
             print("Sexo inválido. Utilize Masculino (M), Feminino (F) ou Outro (O).")
             continue
 
@@ -942,23 +939,22 @@ def adicionar_inquilino():
     while True:
         try:
             # Converter o valor introduzido num número decimal
-            # .replace(",", ".") permite introduzir a vírgula como separador decimal
-            ordenado = float(input("Ordenado mensal (€): ").strip().replace(",", "."))
+            ordenado = float(input("Ordenado mensal (€): ").strip().replace(",", ".")) # .replace(",", ".") permite introduzir a vírgula como separador decimal
 
             # Verificar se o ordenado é negativo, infinito ou NaN (Not a Number)
-            #if:
-                #pass
-                #continue
+            if ordenado < 0 or not math.isfinite(ordenado): # ordenado pode ser zero ao adicionar o inquilino na base de dados, mas nao o vai permitir arrendar um imovel
+                print("O ordenado deve ser um valor não negativo e finito.")
+                continue
 
-            #break
+            # Terminar o ciclo quando o ordenado passa todas as validações
+            break
 
         except ValueError:
             # Tratar entradas que não podem ser convertidas para números
             print("Introduza um valor numérico válido para o ordenado.")
 
     
-    # Inicializar a variável de ligação à base de dados antes do try
-    # para verificar no finally se a ligação foi estabelecida
+    # Inicializar a variável de ligação à base de dados antes do try para verificar no finally se a ligação foi estabelecida
     conexao = None
     try:
         # Estabelecer ligação à base de dados
