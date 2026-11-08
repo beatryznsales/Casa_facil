@@ -292,19 +292,26 @@ def adicionar_imovel():
         else:
             print("Estado inválido. Escolha uma das opções apresentadas.")
 
-    # Validar o valor mensal da renda   -- meter dois numeros decimais 
+
+    # Validar o valor mensal da renda
     while True:
         try:
+            # Converter o valor introduzido num número decimal
+            # .replace(",", ".") permite introduzir a vírgula como separador decimal
             renda = float(input("Valor mensal da renda (€): ").strip().replace(",", "."))
 
-            if renda <= 0 or renda == float("inf") or renda != renda:
+            # Verificar se a renda é positiva e finita, rejeitando valores negativos, zero, infinito e NaN
+            if renda <= 0 or not math.isfinite(renda):
                 print("A renda deve ser um valor positivo e finito.")
+                continue
 
-            else:
-                break
+            # Terminar o ciclo quando a renda passa todas as validações
+            break
 
         except ValueError:
+            # Tratar entradas que não podem ser convertidas para números
             print("Introduza um valor numérico válido para a renda.")
+
 
     # Definir automaticamente a situação inicial do imóvel
     situacao = "Disponível"
@@ -336,6 +343,10 @@ def adicionar_imovel():
         cursor.execute("INSERT INTO imoveis (tipo, quartos, id_morada, estado, renda, situacao, nif_proprietario) VALUES (?, ?, ?, ?, ?, ?, ?)", (tipo, quartos, id_morada, estado, renda, situacao, int(nif_proprietario)))
 
         # Atualizar o número de habitações registadas pelo proprietário
+        # Com UPDATE proprietarios atualizar o numero de habitações na coluna identificada por SET
+        # Com COALESCE() é devolvido o valor já existente na tabela e somado mais um imovel. Converte os NULL em zero
+        # WHERE nif = ? indica qual o proprietário cujo registo deve ser atualizado (senão todos os proprietarios aumentariam +1)
+        #( ..., ) criam um tuplo com um único elemento (o nif do proprietario)
         cursor.execute("UPDATE proprietarios SET N_habitacoes_registadas = COALESCE(N_habitacoes_registadas, 0) + 1 WHERE nif = ?", (int(nif_proprietario),))
 
         # Guardar as alterações na base de dados
@@ -358,18 +369,33 @@ def adicionar_imovel():
             conexao.close()
 
 
-def consultar_imoveis():   ### ATENCAO: melhorar a consulta com JOIN para mostrar os detalhes da morada, do inquilino e do proprietário, em vez de apenas os IDs. ###
-    # Estabelecer ligação à base de dados.
-    conexao = sqlite3.connect(base_de_dados)
-    cursor = conexao.cursor()
+def consultar_imoveis():
+    # Consultar todos os imóveis registados e as respetivas moradas
+
+    # Inicializar a variável de ligação à base de dados antes do try
+    conexao = None
 
     try:
-        # Consultar todos os imóveis registados.
-        cursor.execute("SELECT * FROM imoveis")
-        
-        #SELECT imoveis.id, imoveis.tipo, imoveis.quartos, imoveis.estado, imoveis.renda, imoveis.duracao, imoveis.situacao, imoveis.nif_proprietario, moradas.rua, moradas.num_porta, moradas.num_andar, moradas.codigo_postal, moradas.cidade
-        #FROM imoveis JOIN moradas ON imoveis.id_morada = moradas.id
+        # Estabelecer ligação à base de dados
+        conexao = sqlite3.connect(base_de_dados)
+        cursor = conexao.cursor()
 
+        # Consultar os imóveis e os dados das respetivas moradas e proprietários
+        # JOIN permite relacionar as tabelas através do ID da morada e do NIF do proprietário
+        cursor.execute("""
+            SELECT imoveis.id, imoveis.tipo, imoveis.quartos,
+                   imoveis.estado, imoveis.renda, imoveis.duracao,
+                   imoveis.situacao, imoveis.nif_proprietario,
+                   moradas.rua, moradas.num_porta, moradas.num_andar,
+                   moradas.codigo_postal, moradas.cidade,
+                   proprietarios.nome_completo
+            FROM imoveis
+            JOIN moradas ON imoveis.id_morada = moradas.id
+            JOIN proprietarios ON imoveis.nif_proprietario = proprietarios.nif
+            ORDER BY imoveis.id
+            """)
+
+        # Obter todos os resultados da consulta
         imoveis = cursor.fetchall()
 
         if len(imoveis) == 0:
@@ -378,24 +404,37 @@ def consultar_imoveis():   ### ATENCAO: melhorar a consulta com JOIN para mostra
         else:
             print("\n--- LISTA DE IMÓVEIS ---")
 
+            # Percorrer os imóveis encontrados e apresentar os seus dados
             for imovel in imoveis:
                 print("\n" + "-" * 40)
                 print(f"ID: {imovel[0]}")
                 print(f"Tipo: {imovel[1]}")
                 print(f"Número de quartos: {imovel[2]}")
-                print(f"ID da morada: {imovel[3]}")
-                print(f"Estado: {imovel[4]}")
-                print(f"Renda mensal: {imovel[5]:.2f} €")
-                print(f"Duração do contrato: {imovel[6]}")
-                print(f"Situação: {imovel[7]}")
-                print(f"NIF do proprietário: {imovel[8]}")
+                print(f"Estado: {imovel[3]}")
+                print(f"Renda mensal: {imovel[4]:.2f} €")
+                print(f"Duração do contrato: {imovel[5] if imovel[5] is not None else 'Sem contrato'}")
+                print(f"Situação: {imovel[6]}")
+                print(f"NIF do proprietário: {imovel[7]}")
+
+                # Apresentar os dados da morada
+                print(f"Rua: {imovel[8]}")
+                print(f"Número da porta: {imovel[9]}")
+                print(f"Andar/Fração: {imovel[10] if imovel[10] else 'Não aplicável'}")
+                print(f"Código postal: {imovel[11]}")
+                print(f"Cidade: {imovel[12]}")
+
+                # Apresentar o nome do proprietário
+                print(f"Nome do proprietário: {imovel[13]}")
 
     except sqlite3.Error as e:
-        print(f"Erro ao consultar imóveis: {e}")
+        # Tratar erros relacionados com a base de dados
+        print(f"\nErro ao consultar imóveis: {e}")
 
     finally:
-        # Fechar a ligação à base de dados.
-        conexao.close()
+        # Fechar a ligação à base de dados, caso tenha sido estabelecida
+        if conexao is not None:
+            conexao.close()
+
 
 
 
@@ -941,7 +980,7 @@ def adicionar_inquilino():
             # Converter o valor introduzido num número decimal
             ordenado = float(input("Ordenado mensal (€): ").strip().replace(",", ".")) # .replace(",", ".") permite introduzir a vírgula como separador decimal
 
-            # Verificar se o ordenado é negativo, infinito ou NaN (Not a Number)
+            # Verificar se o ordenado é finito: se for negativo, infinito ou NaN (Not a Number) é bloqueado
             if ordenado < 0 or not math.isfinite(ordenado): # ordenado pode ser zero ao adicionar o inquilino na base de dados, mas nao o vai permitir arrendar um imovel
                 print("O ordenado deve ser um valor não negativo e finito.")
                 continue
