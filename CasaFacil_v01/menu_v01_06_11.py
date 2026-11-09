@@ -12,6 +12,12 @@ import datetime
 import os
 import sqlite3
 import math
+from operacoes.imoveis import *
+from operacoes.proprietario_inquilinos import *
+import inquirer   
+import sys
+from pprint import pprint
+sys.path.append(os.path.realpath(".")) # adiciona o directorio de trabalho ao módulo de procura do python, permitindo importar modulos locais e scripts sem ter de instalar
 
 # Obter o caminho completo da pasta onde o programa está guardado
 
@@ -1078,21 +1084,28 @@ def menu_principal():
     # Menu principal da aplicação - o utilizador fica no menu principal até escolher a opção de sair da aplicação.
     # Permite escolher entre a gestão de imóveis, inquilinos e proprietários, ou sair da aplicação.
     
-    #os.system('cls')
+    os.system('cls')
     
     while True:
         print("\n" + "=" * 40)
         print("       CASAFÁCIL LDA. - GESTÃO DE IMÓVEIS")
         print("=" * 40)
-        print("1. Gestão de Imóveis")
-        print("2. Gestão de Inquilinos")
-        print("3. Gestão de Proprietários")
-        print("0. Sair")
-        print("=" * 40)
+        #print("1. Gestão de Imóveis")
+        #print("2. Gestão de Inquilinos")
+        #print("3. Gestão de Proprietários")
+       # print("0. Sair")
+        #print("=" * 40)
  
-        opcao = input("Escolha uma opção: ").strip()
- 
- 
+        #opcao = input("Escolha uma opção: ").strip()
+        menu=[inquirer.List('opcao',
+                            message="Escolha o que quer fazer:",
+                            choices=["1. Gestão de Imóveis", "2. Gestão de Inquilinos","3. Gestão de Proprietários","0. Sair"]
+            ),
+        ]
+        answers = inquirer.prompt(menu)
+        pprint(answers['opcao'])
+        opcao = answers['opcao'][0]  # Extrair o primeiro caractere da string selecionada, que corresponde à opção escolhida (1, 2, 3 ou 0)
+        print(f"Opção escolhida: {opcao}")  # Exibir a opção escolhida para verificação
         if opcao == "1":
             menu_imoveis()
  
@@ -1114,43 +1127,52 @@ def menu_principal():
 
 # pesquisar modulo inquirer
 
+
 def menu_imoveis():
     while True:
-        #os.system('cls')  # limpar o terminar
+        os.system('cls')  # limpar o terminar
         print("\n" + "=" * 40)
         print("\n--- GESTÃO DE IMÓVEIS ---")
         print("=" * 40)
 
-        print("1. Adicionar imóvel")
-        print("2. Consultar todos os imóveis")
-        #print("3. Consultar imóveis disponíveis")
-        #print("4. Consultar imóveis alugados")
-        #print("5. Alterar dados de um imóvel")
-        #print("6. Atribuir imóvel a um inquilino")
-        #print("7. Encerrar contrato de arrendamento")
-        print("0. Voltar ao menu principal")
+        #print("1. Adicionar imóvel")
+        #print("2. Consultar todos os imóveis")
+        ##print("3. Consultar imóveis disponíveis")
+        ##print("4. Consultar imóveis alugados")
+        ##print("5. Alterar dados de um imóvel")
+        ##print("6. Atribuir imóvel a um inquilino")
+        ##print("7. Encerrar contrato de arrendamento")
+        #print("0. Voltar ao menu principal")
 
-        print("=" * 40)
- 
-        opcao = input("Escolha uma opção: ").strip() 
- 
+        #print("=" * 40)
+
+        menu=[inquirer.List('opcao',
+            message="Escolha o que quer fazer:",
+            choices=["1. Adicionar imóvel", "2. Consultar todos os imóveis","0. Voltar ao menu principal"]
+            ),
+        ]
+        answers = inquirer.prompt(menu)
+        pprint(answers['opcao'])
+        opcao = answers['opcao'][0]  # Extrair o primeiro caractere da string selecionada, que corresponde à opção escolhida (1, 2, 3 ou 0)
+        print(f"Opção escolhida: {opcao}")  # Exibir a opção escolhida para verificação
+                 
         if opcao == "1":
             adicionar_imovel()
 
         elif opcao == "2":
             consultar_imoveis()
 
-        #elif opcao == "3":
-            #consultar_imoveis_disponiveis()
+        elif opcao == "3":
+            consultar_imoveis_disponiveis()
 
-        #elif opcao == "4":
-            #consultar_imoveis_alugados()
+        elif opcao == "4":
+            consultar_imoveis_alugados()
 
-        #elif opcao == "5":
-            #alterar_dados_imovel()
+        elif opcao == "5":
+            alterar_dados_imovel()
 
         #elif opcao == "6":
-            #atribuir_imovel_inquilino()
+            atribuir_imovel_inquilino()
 
         #elif opcao == "7":
             #encerrar_contrato_arrendamento()
@@ -1167,12 +1189,21 @@ def menu_imoveis():
  
 def menu_inquilinos():
     while True:
-        print("\n--- GESTÃO DE INQUILINOS ---")
-        print("1. Registar inquilino")
-        print("2. Consultar todos os inquilinos")
-        print("0. Voltar ao menu principal")
- 
-        opcao = input("Escolha uma opção: ")
+        os.system('cls')  # limpar o terminar
+        #print("\n--- GESTÃO DE INQUILINOS ---")
+        #print("1. Registar inquilino")
+        #print("2. Consultar todos os inquilinos")
+        #print("0. Voltar ao menu principal")
+        menu=[inquirer.List('opcao',
+                    message="\n--- GESTÃO DE INQUILINOS ---",
+                    choices=["1. Registar inquilino", "2. Consultar todos os inquilinos","0. Voltar ao menu principal"]
+                ),
+            ]
+        answers = inquirer.prompt(menu)
+        pprint(answers['opcao'])
+        opcao = answers['opcao'][0]  # Extrair o primeiro caractere da string selecionada, que corresponde à opção escolhida (1, 2, 3 ou 0)
+        print(f"Opção escolhida: {opcao}")  # Exibir a opção escolhida para verificação
+        #opcao = input("Escolha uma opção: ")
  
         if opcao == "1":
             adicionar_inquilino()
@@ -1189,12 +1220,22 @@ def menu_inquilinos():
  
 def menu_proprietarios():
     while True:
+        os.system('cls')  # limpar o terminar
         print("\n--- GESTÃO DE PROPRIETÁRIOS ---")
-        print("1. Registar proprietário")
-        print("2. Consultar todos os proprietários")
-        print("0. Voltar ao menu principal")
+        #print("1. Registar proprietário")
+        #print("2. Consultar todos os proprietários")
+        #print("0. Voltar ao menu principal")
+        menu=[inquirer.List('opcao',
+                    message="\n--- GESTÃO DE PROPRIETÁRIOS ---",
+                    choices=["1. Registar proprietário", "2. Consultar todos os proprietários","0. Voltar ao menu principal"]
+                ),
+            ]
+        answers = inquirer.prompt(menu)
+        pprint(answers['opcao'])
+        opcao = answers['opcao'][0]  # Extrair o primeiro caractere da string selecionada, que corresponde à opção escolhida (1, 2, 3 ou 0)
+        print(f"Opção escolhida: {opcao}")  # Exibir a opção escolhida para verificação
  
-        opcao = input("Escolha uma opção: ")
+        #opcao = input("Escolha uma opção: ")
  
         if opcao == "1":
             adicionar_proprietario()
