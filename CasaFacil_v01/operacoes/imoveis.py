@@ -166,18 +166,18 @@ def adicionar_imovel():
 
     # Validar o andar/fração (campo opcional)
     while True:
-        num_andar = input("Andar/Fração (se houver, ex.: 2.º Esq., R/C ou 3B): ").strip()
+        num_apartamento = input("Andar/Fração (se houver, ex.: 2.º Esq., R/C ou 3B): ").strip()
 
-        if num_andar == "":
+        if num_apartamento == "":
             break
 
-        elif len(num_andar) > 15:
+        elif len(num_apartamento) > 15:
             print("A identificação do andar/fração não pode ultrapassar 15 caracteres.")
 
-        elif not all(caracter.isalnum() or caracter in " .ºª/-" for caracter in num_andar):
+        elif not all(caracter.isalnum() or caracter in " .ºª/-" for caracter in num_apartamento):
             print("A identificação do andar/fração contém caracteres inválidos.")
 
-        elif not any(caracter.isalnum() for caracter in num_andar):
+        elif not any(caracter.isalnum() for caracter in num_apartamento):
             print("A identificação do andar/fração deve conter letras ou números.")
 
         else:
@@ -275,24 +275,7 @@ def adicionar_imovel():
             print("Estado inválido. Escolha uma das opções apresentadas.")
 
 
-    # Validar o valor mensal da renda
-    while True:
-        try:
-            # Converter o valor introduzido num número decimal
-            # .replace(",", ".") permite introduzir a vírgula como separador decimal
-            renda = float(input("Valor mensal da renda (€): ").strip().replace(",", "."))
-
-            # Verificar se a renda é positiva e finita, rejeitando valores negativos, zero, infinito e NaN
-            if renda <= 0 or not math.isfinite(renda):
-                print("A renda deve ser um valor positivo e finito.")
-                continue
-
-            # Terminar o ciclo quando a renda passa todas as validações
-            break
-
-        except ValueError:
-            # Tratar entradas que não podem ser convertidas para números
-            print("Introduza um valor numérico válido para a renda.")
+    renda = fornecer_validar_renda("Valor mensal da renda (€): ")
 
 
     # Definir automaticamente a situação inicial do imóvel
@@ -316,7 +299,7 @@ def adicionar_imovel():
             return
 
         # Inserir a morada na base de dados
-        cursor.execute("INSERT INTO moradas(rua, num_porta, num_andar, codigo_postal, cidade) VALUES (?, ?, ?, ?, ?)", (rua, num_porta, num_andar, codigo_postal, cidade))
+        cursor.execute("INSERT INTO moradas(rua, num_porta, num_apartamento, codigo_postal, cidade) VALUES (?, ?, ?, ?, ?)", (rua, num_porta, num_apartamento, codigo_postal, cidade))
 
         # Obter o ID da morada criada.
         id_morada = cursor.lastrowid
@@ -492,8 +475,60 @@ def consultar_imoveis_alugados():
             conexao.close()
 
 def alterar_dados_imovel ():
-    id_imovel_selecionado = selecionar_imovel()
     #Adicionar opções de alterações como: Duracao, estado ou renda
+    id_imovel_selecionado = selecionar_imovel()
+
+    while True:
+        pergunta = [
+            inquirer.List('alteracao',
+                message="Indique o que deseja editar nesse imovel:",
+                choices= ["1.Alterar duração do contrato", "2.Alterar estado do imovel", "3. Alterar valor da renda", "0. Voltar"],
+            )
+        ]
+            
+        selecao = inquirer.prompt(pergunta)
+        opcao_escolhida = selecao["alteracao"][0]
+        if opcao_escolhida == "1":
+            #Adicionar validação
+            nova_duracao = input("Informe a nova duraçao do contrato: ")
+            alteracoes_imovel(id_imovel_selecionado, "duracao", f"'{nova_duracao}'")
+        elif opcao_escolhida == "2":
+            pergunta_estado = [
+                inquirer.List('estado',
+                    message="Indique o novo estado do imovel:",
+                    choices= ["Novo", "Usado", "Mau Estado", "Remodelado"],
+                )
+            ]
+            
+            respo_novo_estado = inquirer.prompt(pergunta_estado)
+            novo_estado = f"'{respo_novo_estado["estado"]}'"
+            
+            alteracoes_imovel(id_imovel_selecionado, "estado", novo_estado)
+        elif opcao_escolhida == "3":
+            nova_renda = fornecer_validar_renda("Indique o novo valor de renda (€): ")
+            
+            alteracoes_imovel(id_imovel_selecionado, "renda", nova_renda)
+        elif opcao_escolhida == "0":
+            break
+#Utilizado para permitir o usuario alterar valor da renda, estado do imovel ou duração de contrato. A mesma função é chamada para nas três opções
+def alteracoes_imovel(imovel_id, coluna, novo_valor):
+    #Estabelecer ligação à base de dados
+    conexao = sqlite3.connect(base_de_dados)
+    cursor = conexao.cursor()
+
+    try:
+        #
+        cursor.execute(f"UPDATE imoveis SET {coluna} = {novo_valor} WHERE id = {int(imovel_id)}")
+        conexao.commit()
+
+    except sqlite3.Error as e:
+        print("\nErro ao verificar imóveis disponiveis.", e)
+        return
+    
+    finally:
+        if conexao is not None:
+            conexao.close()
+
 
 def selecionar_imovel():
     #Estabelecer ligação à base de dados
@@ -533,7 +568,25 @@ def selecionar_imovel():
     
         selecao = inquirer.prompt(pergunta)
         morada_escolhida = selecao["imovel"]
-        print(f"Imóvel na morada \"{morada_escolhida}\" selecionado")
+        print(f"Imóvel na morada \"{morada_escolhida} selecionado")
         id_imovel_selecionado = escolhas[morada_escolhida]
 
         return id_imovel_selecionado
+
+def fornecer_validar_renda(messagem):
+    # Validar o valor mensal da renda
+    while True:
+        try:
+            # Converter o valor introduzido num número decimal
+            # .replace(",", ".") permite introduzir a vírgula como separador decimal
+            renda = float(input(messagem).strip().replace(",", "."))
+
+            # Verificar se a renda é positiva e finita, rejeitando valores negativos, zero, infinito e NaN
+            if renda <= 0 or not math.isfinite(renda):
+                print("A renda deve ser um valor positivo e finito.")
+                continue
+            return renda
+
+        except ValueError:
+            # Tratar entradas que não podem ser convertidas para números
+            print("Introduza um valor numérico válido para a renda.")
