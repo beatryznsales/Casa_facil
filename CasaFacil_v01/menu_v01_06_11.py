@@ -48,7 +48,7 @@ def menu_principal():
  
         #opcao = input("Escolha uma opção: ").strip()
         menu=[inquirer.List('opcao',
-                            message="Escolha o que quer fazer:",
+                            message="Escolha o que quer fazer",
                             choices=["1. Gestão de Imóveis", "2. Gestão de Inquilinos","3. Gestão de Proprietários","0. Sair"]
             ),
         ]
