@@ -136,7 +136,7 @@ def menu_imoveis():
         else:
             print("Opção inválida!")
  
- 
+
 def menu_inquilinos():
     os.system('cls')  # limpar o terminar
     while True:
@@ -167,11 +167,12 @@ def menu_inquilinos():
 
         else:
             print("Opção inválida!")
- 
- 
+
+
 def menu_proprietarios():
+    os.system('cls')  # limpar o terminar
     while True:
-        os.system('cls')  # limpar o terminar
+        
         print("\n--- GESTÃO DE PROPRIETÁRIOS ---")
         #print("1. Registar proprietário")
         #print("2. Consultar todos os proprietários")
