@@ -75,12 +75,12 @@ def menu_principal():
         else:
             print("Opção inválida! Escolha um número entre 0 e 3.")
 
-# pesquisar modulo inquirer
+#modulo inquirer - aplicado para criar menus interativos no terminal, permitindo ao utilizador escolher opções de forma mais intuitiva e visualmente agradável. O módulo inquirer facilita a criação de listas de opções, prompts e outros elementos de interface de linha de comando.
 
 
 def menu_imoveis():
+    os.system('cls')  # limpar o terminar
     while True:
-        os.system('cls')  # limpar o terminar
         print("\n" + "=" * 40)
         print("\n--- GESTÃO DE IMÓVEIS ---")
         print("=" * 40)
@@ -138,8 +138,9 @@ def menu_imoveis():
  
  
 def menu_inquilinos():
+    os.system('cls')  # limpar o terminar
     while True:
-        os.system('cls')  # limpar o terminar
+        
         #print("\n--- GESTÃO DE INQUILINOS ---")
         #print("1. Registar inquilino")
         #print("2. Consultar todos os inquilinos")
