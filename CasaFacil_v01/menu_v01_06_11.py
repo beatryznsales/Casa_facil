@@ -78,6 +78,7 @@ def menu_principal():
             print(" A sair da aplicação CasaFácil, LDA. Obrigado(a) por utilizar o nosso software!")
             print("""\n        Coded by Beatryz Souza, Filipa Nogueira and Vívian Santos.""")
             print("\n")
+            wait = input()
             break
 
         elif opcao == "":
@@ -122,11 +123,11 @@ def menu_imoveis():
         elif opcao == "5":
             alterar_dados_imovel()
 
-        #elif opcao == "6":
-            #atribuir_imovel_inquilino()
+        elif opcao == "6":
+            atribuir_imovel_inquilino()
 
-        #elif opcao == "7":
-            #encerrar_contrato_arrendamento()
+        elif opcao == "7":
+            encerrar_contrato_arrendamento()
 
         elif opcao == "0":
             break

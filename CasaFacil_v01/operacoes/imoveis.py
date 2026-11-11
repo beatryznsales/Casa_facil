@@ -238,18 +238,7 @@ def adicionar_imovel():
             print("Tipo de imóvel inválido. Escolha Moradia, Apartamento ou Quinta.")
 
     # Validar o número de quartos
-    while True:
-        try:
-            quartos = int(input("Número de quartos: ").strip())
-
-            if quartos < 0:
-                print("O número de quartos não pode ser negativo.")
-
-            else:
-                break
-
-        except ValueError:
-            print("Introduza um número inteiro válido para os quartos.")
+    quartos = fornecer_validar_quartos()
 
     # Validar o estado do imóvel
     while True:
@@ -482,13 +471,20 @@ def consultar_imoveis_alugados():
 
 def alterar_dados_imovel ():
     #Adicionar opções de alterações como: Duracao, estado ou renda
-    id_imovel_selecionado = selecionar_imovel()
-
+    id_imovel_selecionado = selecionar_imovel()[0]
+    opcoes = [
+        "1.Alterar duração do contrato", 
+        "2.Alterar estado do imovel", 
+        "3. Alterar valor da renda", 
+        "4. Alterar tipo do imóvel", 
+        "5. Alterar número de quartos",
+        "0. Voltar"
+    ]
     while True:
         pergunta = [
             inquirer.List('alteracao',
-                message="Indique o que deseja editar nesse imovel:",
-                choices= ["1.Alterar duração do contrato", "2.Alterar estado do imovel", "3. Alterar valor da renda", "0. Voltar"],
+                message="Indique o que deseja editar nesse imovel",
+                choices= opcoes,
             )
         ]
             
@@ -501,7 +497,7 @@ def alterar_dados_imovel ():
         elif opcao_escolhida == "2":
             pergunta_estado = [
                 inquirer.List('estado',
-                    message="Indique o novo estado do imovel:",
+                    message="Indique o novo estado do imovel",
                     choices= ["Novo", "Usado", "Mau Estado", "Remodelado"],
                 )
             ]
@@ -514,16 +510,35 @@ def alterar_dados_imovel ():
             nova_renda = fornecer_validar_renda("Indique o novo valor de renda (€): ")
             
             alteracoes_imovel(id_imovel_selecionado, "renda", nova_renda)
+            print(f"Valor da renda alterado com sucesso. Novo valor {nova_renda}")
+        elif opcao_escolhida == "4":
+            pergunta_estado = [
+                inquirer.List('tipo',
+                    message="Indique o novo estado do imovel",
+                    choices= ["Apartamento", "Moradia", "Quinta"],
+                )
+            ]
+            
+            resposta = inquirer.prompt(pergunta_estado)
+            novo_tipo = f"'{resposta["tipo"]}'"
+            
+            alteracoes_imovel(id_imovel_selecionado, "tipo", novo_tipo)
+
+        elif opcao_escolhida == "5":
+            num_quartos = input("Informe o novo número de quartos: ")
+            alteracoes_imovel(id_imovel_selecionado, "quartos", num_quartos)
+
         elif opcao_escolhida == "0":
             break
-#Utilizado para permitir o usuario alterar valor da renda, estado do imovel ou duração de contrato. A mesma função é chamada para nas três opções
+
+#Funcao permite atualizar informações do imovel com base do Id, coluna e novo valor passado por argumento
 def alteracoes_imovel(imovel_id, coluna, novo_valor):
     #Estabelecer ligação à base de dados
     conexao = sqlite3.connect(base_de_dados)
     cursor = conexao.cursor()
 
     try:
-        #
+        #Coloca os argumentos da funcao na chamada de update para a base de dados.
         cursor.execute(f"UPDATE imoveis SET {coluna} = {novo_valor} WHERE id = {int(imovel_id)}")
         conexao.commit()
 
@@ -535,50 +550,71 @@ def alteracoes_imovel(imovel_id, coluna, novo_valor):
         if conexao is not None:
             conexao.close()
 
-
-def selecionar_imovel():
+#Lista os imoveis com base no filtro passado por argumento. Caso vazio, lista sem filtro
+def selecionar_imovel(filtro = ""):
     #Estabelecer ligação à base de dados
-        conexao = sqlite3.connect(base_de_dados)
-        cursor = conexao.cursor()
+    conexao = sqlite3.connect(base_de_dados)
+    cursor = conexao.cursor()
+
+    escolhas = {} #Usado para criar um dicionário com as opções: id do imóvel, e morada contendo rua, número de porta e apartamento, cidade e renda do imovel
+    sql = "SELECT imoveis.id, moradas.rua, moradas.num_porta, moradas.num_apartamento, moradas.cidade, imoveis.renda FROM imoveis JOIN moradas ON imoveis.id_morada = moradas.id"
+
+    if filtro != "":
+        sql = sql + f" WHERE {filtro}"
+
+    try:
+        #Listar ID do imóvel, informacao da morada e a renda
+        cursor.execute(sql)
+        imoveis = cursor.fetchall()
+
+        #Definir opções de escolhas para o utilizador
+        for imovel in imoveis:
+            numero_apartamento = ""
+            if imovel[3]:
+                numero_apartamento = ", "+imovel[3] 
+            morada = f"{imovel[1]}, {imovel[2]}{numero_apartamento}, {imovel[4]}"
+            escolhas[morada]= imovel
+
+    except sqlite3.Error as e:
+        print("\nErro ao verificar imóveis disponiveis.", e)
+        return
     
-        escolhas = {} #Usado para criar um dicionário com as opções: id do imóvel, e morada contendo rua, número de porta e apartamento e cidade
-    
+    finally:
+        if conexao is not None:
+            conexao.close()
+
+    pergunta = [
+        inquirer.List('imovel',
+            message="Indique o imóvel que deseja editar",
+            choices=escolhas.keys(),
+        )
+    ]
+
+    selecao = inquirer.prompt(pergunta)
+    morada_escolhida = selecao["imovel"]
+    print(f"Imóvel na morada \"{morada_escolhida} selecionado")
+    imovel_selecionado = escolhas[morada_escolhida]
+
+    return imovel_selecionado
+
+#Essa função captura a entrada do utilizador para o numero de quartos
+#Utilizada tanto para alteração quanto criação de imóveis
+def fornecer_validar_quartos():
+    while True:
         try:
-            #Listar ID do imóvel e morada
-            cursor.execute("SELECT imoveis.id, moradas.rua, moradas.num_porta, moradas.num_apartamento, moradas.cidade FROM imoveis JOIN moradas ON imoveis.id_morada = moradas.id")
-            imoveis = cursor.fetchall()
-    
-            #Definir opções de escolhas para o usuário
-            for imovel in imoveis:
-                numero_apartamento = ""
-                if imovel[3]:
-                    numero_apartamento = ", "+imovel[3] 
-                imovelId = imovel[0]
-                morada = f"{imovel[1]}, {imovel[2]}{numero_apartamento}, {imovel[4]}"
-                escolhas[morada]=imovelId
-    
-        except sqlite3.Error as e:
-            print("\nErro ao verificar imóveis disponiveis.", e)
-            return
-        
-        finally:
-            if conexao is not None:
-                conexao.close()
-    
-        pergunta = [
-            inquirer.List('imovel',
-                message="Indique o imóvel que deseja editar:",
-                choices=escolhas.keys(),
-            )
-        ]
-    
-        selecao = inquirer.prompt(pergunta)
-        morada_escolhida = selecao["imovel"]
-        print(f"Imóvel na morada \"{morada_escolhida} selecionado")
-        id_imovel_selecionado = escolhas[morada_escolhida]
+            quartos = int(input("Número de quartos: ").strip())
 
-        return id_imovel_selecionado
+            if quartos < 0:
+                print("O número de quartos não pode ser negativo.")
+                continue
 
+            return quartos
+
+        except ValueError:
+            print("Introduza um número inteiro válido para os quartos.")
+
+#Essa função captura a entrada do utilizador para o valor da renda
+#Utilizada tanto para alteração quanto criação de imóveis
 def fornecer_validar_renda(messagem):
     # Validar o valor mensal da renda
     while True:
@@ -596,3 +632,92 @@ def fornecer_validar_renda(messagem):
         except ValueError:
             # Tratar entradas que não podem ser convertidas para números
             print("Introduza um valor numérico válido para a renda.")
+
+#Atribui um inquilino existente num imóvel Disponível
+def atribuir_imovel_inquilino():
+    #Retorna o imóvel disponível escolhido pelo o utilizador
+    imovel_selecionado = selecionar_imovel("situacao = 'Disponível'")
+    imovel_renda = imovel_selecionado[5] #Pega a sexta coluna da consulta anterior
+    imovel_id = imovel_selecionado[0] #Pega a primeira coluna que é o id do imovel
+
+    nif = input("Informe o NIF do inquilino: ") #Pede o nif do inquilino ao utilizador
+
+    #Efetua a busca do inquilino filtrando pelo nif
+    inquilino = buscar_inquilino(nif)
+
+    #Quando a busca não encontrar um inquilino nos encerramos a função
+    if inquilino is None:
+        print("Inquilino não encontrado. Registre-o primeiro")
+        return
+
+    #A busca retorna o id do imovel, caso seja tem um id significa que o inquilino já tem imóvel
+    if inquilino[7] is not None:
+        print("Inquilino já atribuido a um imovel")
+        return
+
+    #A renda do imovel não pode ultrapassar 60% do ordenado do inquilino
+    inquilinos_ordenado = inquilino[6]
+    #Calcular se o ordenado atende ao requisito
+    limite_maximo = inquilinos_ordenado * 0.60
+
+    if imovel_renda > limite_maximo:
+        print("Atribuição negada por conta da renda")
+        return
+
+    conexao = sqlite3.connect(base_de_dados)
+    cursor = conexao.cursor()
+    try:
+        #Atualizar a situação do imovel para arrendada e incluir o nif do inquilino
+        cursor.execute(
+            """
+                UPDATE imoveis 
+                SET nif_inquilino = ?, situacao = 'Arrendada'
+                WHERE id = ?
+            """,
+            (nif, imovel_id),
+        )
+        #Confirmar atribuição
+        conexao.commit()
+        print("Inquilino atribuído o sucesso!")
+    finally:
+        #Fechar a conexão
+        if conexao is not None:
+            conexao.close()
+
+#Retorno um único inquilino mais o id do imóvel associado a ele
+def buscar_inquilino(nif):
+    conexao = sqlite3.connect(base_de_dados)
+    cursor = conexao.cursor()
+    try:
+        #O select usa o left join para garantir que caso nao exista imovel para o inquilino retorne null
+        cursor.execute(f"SELECT inquilinos.*, imoveis.id FROM inquilinos LEFT JOIN imoveis ON imoveis.nif_inquilino = inquilinos.nif WHERE nif = {nif}")
+        inquilino = cursor.fetchone()
+        
+        return inquilino
+    except:
+        print("Erro buscando inquilino")
+        return None
+    finally:
+        if conexao is not None:
+            conexao.close()
+
+#Atualiza o imovel arrendado para diponível e remove o inquilino
+def encerrar_contrato_arrendamento():
+    #Retorna o imóvel arrendado escolhido pelo o utilizador
+    imovel_selecionado = selecionar_imovel("situacao = 'Arrendada'")
+    imovel_id = imovel_selecionado[0]
+
+    conexao = sqlite3.connect(base_de_dados)
+    cursor = conexao.cursor()
+    try:
+        #Atualizar a base de dados
+        cursor.execute(f"UPDATE imoveis SET nif_inquilino = NULL, situacao = 'Disponível' WHERE id = {imovel_id}")
+
+        #Confirmar atribuição
+        conexao.commit()
+        print("Contrato encerrado!")
+    finally:
+        #Fechar a conexão
+        if conexao is not None:
+            conexao.close()
+
