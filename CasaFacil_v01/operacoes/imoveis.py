@@ -399,6 +399,8 @@ def consultar_imoveis():
         if conexao is not None:
             conexao.close()
 
+        input("\nPressione Enter para voltar ao menu...")
+
 def consultar_imoveis_disponiveis():
 # Estabelecer ligação à base de dados.
     conexao = sqlite3.connect(base_de_dados)
@@ -435,6 +437,8 @@ def consultar_imoveis_disponiveis():
     finally:
         if conexao is not None:
             conexao.close()
+
+        input("\nPressione Enter para voltar ao menu...")
 
 def consultar_imoveis_alugados():
 # Estabelecer ligação à base de dados.
@@ -473,6 +477,8 @@ def consultar_imoveis_alugados():
     finally:
         if conexao is not None:
             conexao.close()
+        
+        input("\nPressione Enter para voltar ao menu...")
 
 def alterar_dados_imovel ():
     #Adicionar opções de alterações como: Duracao, estado ou renda

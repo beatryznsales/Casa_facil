@@ -91,7 +91,7 @@ def menu_imoveis():
         os.system("clear")
     
     while True:
-        print("       --- GESTÃO DE IMÓVEIS ---")
+        print("\n--- GESTÃO DE IMÓVEIS ---")
 
         menu=[inquirer.List('opcao',
             message="Escolha o que quer fazer",
