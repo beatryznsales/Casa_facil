@@ -83,9 +83,13 @@ def validar_data_nascimento(tipo_pessoa, edicao=False):
                 print("A data de nascimento não pode ser futura.")
                 continue
 
-            # Verificar se tem pelo menos 18 anos
+            # Verificar se tem pelo menos 18 anos e não mais que 123 anos
             elif idade < 18:
                 print(f"O {tipo_pessoa} deve ter pelo menos 18 anos.")
+                continue
+
+            elif idade > 123:
+                print("A idade introduzida ultrapassa o limite máximo permitido de 123 anos.")
                 continue
 
             return data_nascimento
