@@ -11,72 +11,45 @@ pasta_programa = os.path.dirname(os.path.abspath(__file__))
 # os.path.join() junta o caminho da pasta ao nome do ficheiro
 base_de_dados = os.path.join(pasta_programa, "../casa_facil.db")
 
-## Para os Proprietários: as funções de adicionar, consultar, editar e eliminar proprietários são definidas abaixo.
 
-def adicionar_proprietario():
-    # Recolher os dados do novo proprietário.
-    print("\n--- REGISTAR PROPRIETÁRIO ---")
+#####################################     FUNÇÕES AUXILIARES DE VALIDAÇÃO    ############################################################################################################################
+# Estas funções são utilizadas no registo e na edição de proprietários e inquilinos.
 
-    # Pedir e validar o nome completo do proprietario
+def validar_nome(edicao=False):
+    # Pedir e validar o nome completo
     while True:
-        nome = input("Nome completo: ").strip()
+        if edicao:
+            nome = input("\nNovo nome completo: ").strip()
+        else:
+            nome = input("Nome completo: ").strip()
 
-        # Verificar que o não pode estar vazio
+        # Verificar que o nome não pode estar vazio
         if nome == "":
             print("O nome não pode estar vazio.")
             continue
 
-        # Não podem ter caracteres especiais nem números, apenas letras como acentos, espaços, apóstrofes e hifens
-        if not all(caracter.isalpha() or caracter in "-' " for caracter in nome):     # .isalpha() verifica se o caracter é uma letra, incluindo letras acentuadas
-            print("O nome deve conter apenas letras, espaços e hífens.")
+        # Não podem ter caracteres especiais nem números, apenas letras como acentos, espaços, apóstrofes e hífenes
+        if not all(caracter.isalpha() or caracter in "-' " for caracter in nome):
+            print("O nome deve conter apenas letras, espaços, apóstrofos e hífenes.")
             continue
 
         # Deve conter pelo menos duas palavras (primeiro e último nome)
-        if len(nome.split()) < 2:   # .split() para dividir o nome em palavras. Ignora espaços consecutivos
-            print("Introduz o nome completo. O nome deve conter pelo menos duas palavras.")
+        if len(nome.split()) < 2:
+            print("Introduza o nome completo. O nome deve conter pelo menos duas palavras.")
             continue
 
-        # Todas as palavras são adicionadas com a primeira letra maiuscula na base de dados
-        nome = " ".join(nome.split()).title()   # .join() junta o espaço " " com o nome dividido por palavras. Colocar a primeira letra de cada palavra em maiusculas com .title()
-        break
+        # Todas as palavras são adicionadas com a primeira letra maiúscula na base de dados
+        nome = " ".join(nome.split()).title()
+        return nome
 
-    
-    # Pedir e validar o NIF do proprietario
-    while True:
-        nif = input("NIF: ").strip() # o input não pede logo o NIF como inteiro, por ser um identificador e não um numero para fazer calculos (evita a introdução de valores como +123456789)
 
-        # Verificar se o NIF contém exatamente 9 dígitos de 0 a 9
-        if (len(nif) != 9 or not nif.isascii() or not nif.isdigit()):
-            print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
-            continue
-
-        # Calcular o dígito de controlo do NIF para verificar se o NIF do proprietário é matematicamente válido em Portugal
-        # Nota - o NIF (Número de Identificação Fiscal) português tem um dígito de controlo: o nono dígito é calculado 
-        # a partir dos oito primeiros dígitos através de um algoritmo módulo 11
-        # Referência: https://nif-express.com/pt/pt/guides/portuguese-nif-number-format
-
-        soma = 0  # Criar a variável soma com o valor inicial 0 para que acumule os resultados
-
-        for i in range(8): # Multiplicar os oito primeiros dígitos por 9, 8, 7, 6, 5, 4, 3 e 2, por esta ordem, e somar os resultados
-            soma += int(nif[i]) * (9 - i) # forma abreviada de escrever soma = soma + int(nif[i]) * (9 - i)
-
-        resto = soma % 11 # Dividir a soma por 11 e guardar o resto (%), pois algoritmo de validação do NIF português baseia-se no módulo 11
-
-        if resto < 2: # Se o resto for 0 ou 1, o dígito de controlo é 0
-            digito_controlo = 0
-        else: # Caso contrário, o dígito de controlo é 11 menos o resto
-            digito_controlo = 11 - resto
-
-        # Comparar o dígito calculado com o último dígito do NIF introduzido pelo utilizador
-        if digito_controlo != int(nif[8]): # fica [8] uma vez que o python começa em 0, ou seja, o nono e último digito fica na posição [8]
-            print("NIF inválido. O dígito de controlo não está correto.") 
-            continue
-
-        break  # NIF passou a validação (não significa que esteja atribuido) e a leitura do restante codigo avança
-
+def validar_data_nascimento(tipo_pessoa, edicao=False):
     # Pedir e validar a data de nascimento
     while True:
-        data_nascimento = input("Data de nascimento (AAAA-MM-DD): ").strip()
+        if edicao:
+            data_nascimento = input("\nNova data de nascimento (AAAA-MM-DD): ").strip()
+        else:
+            data_nascimento = input("Data de nascimento (AAAA-MM-DD): ").strip()
 
         partes_data = data_nascimento.split("-")
 
@@ -89,19 +62,19 @@ def adicionar_proprietario():
             print("Formato de data inválido. Utilize o formato AAAA-MM-DD.")
             continue
 
-        try: 
+        try:
             # Converter a data de nascimento, introduzida como texto (string), num objeto de data
             # .strptime() converte uma string num objeto datetime e interpreta o texto segundo o formato indicado: %Y (ano), %m (mês) e %d (dia)
             # O método .date() permite obter apenas a data, sem a componente da hora.
-            data = datetime.datetime.strptime(data_nascimento, "%Y-%m-%d").date()   
+            data = datetime.datetime.strptime(data_nascimento, "%Y-%m-%d").date()
 
             # Obter a data atual
-            hoje = datetime.date.today()   # A classe date permite trabalhar apenas com datas, sem considerar as horas
+            hoje = datetime.date.today()
 
-            # Calcular a idade do proprietário
+            # Calcular a idade do proprietário ou inquilino
             idade = hoje.year - data.year
 
-            # Subtrair um ano à idade caso o proprietário ainda não tenha feito anos este ano
+            # Subtrair um ano à idade caso ainda não tenha feito anos este ano
             if (hoje.month, hoje.day) < (data.month, data.day):
                 idade -= 1
 
@@ -110,27 +83,31 @@ def adicionar_proprietario():
                 print("A data de nascimento não pode ser futura.")
                 continue
 
-            # Verificar se o proprietário tem pelo menos 18 anos
+            # Verificar se tem pelo menos 18 anos
             elif idade < 18:
-                print("O proprietário deve ter pelo menos 18 anos.")
+                print(f"O {tipo_pessoa} deve ter pelo menos 18 anos.")
                 continue
 
-            break
+            return data_nascimento
 
         except ValueError: # Se o utilizador introduzir datas inválidas, como 2002-02-30, o método strptime() gera um ValueError que é tratado em try/except
             print("Data inválida. Verifique o dia, o mês e o ano introduzidos.")
 
 
-    # Pedir e validar o sexo do proprietário.
+def validar_sexo(edicao=False):
+    # Pedir e validar o sexo
     while True:
-        sexo = input("Sexo (Masculino (M)/Feminino (F)/Outro (O)): ").strip().upper()
+        if edicao:
+            sexo = input("\nSexo (Masculino (M)/Feminino (F)/Outro (O)): ").strip().upper()
+        else:
+            sexo = input("Sexo (Masculino (M)/Feminino (F)/Outro (O)): ").strip().upper()
 
-        # Verificar se a opção introduzida é válida.
+        # Verificar se a opção introduzida é válida
         if sexo not in ["MASCULINO", "FEMININO", "OUTRO", "MASCULINO (M)", "FEMININO (F)", "OUTRO (O)", "MASCULINO(M)", "FEMININO(F)", "OUTRO(O)", "M", "F", "O"]:
             print("Sexo inválido. Utilize Masculino (M), Feminino (F) ou Outro (O).")
             continue
 
-        # Uniformizar os valores para guardar apenas M, F ou O na base de dados.
+        # Uniformizar os valores para guardar apenas M, F ou O na base de dados
         if sexo in ["MASCULINO", "MASCULINO (M)", "MASCULINO(M)"]:
             sexo = "M"
 
@@ -140,13 +117,18 @@ def adicionar_proprietario():
         elif sexo in ["OUTRO", "OUTRO (O)", "OUTRO(O)"]:
             sexo = "O"
 
-        # Terminar o ciclo após validar e uniformizar o valor.
-        break
+        # Terminar o ciclo após validar e uniformizar o valor
+        return sexo
 
 
-    # Pedir e validar o contacto telefónico do proprietário  --> ANTENÇÃO: Na BD considerar como contacto telefonico uma vez que não detecta diferença entre telemoveis e números fixos
+def validar_contacto_telefonico(edicao=False):
+    # Pedir e validar o contacto telefónico
+    # Permite números de telefone fixos e móveis, portugueses e estrangeiros
     while True:
-        contacto_telefonico = input("Contacto telefónico (ex.: +351 912345678): ").strip()
+        if edicao:
+            contacto_telefonico = input("\nNovo contacto telefónico (ex.: +351 912345678): ").strip()
+        else:
+            contacto_telefonico = input("Contacto telefónico (ex.: +351 912345678): ").strip()
 
         # Verificar se o campo está vazio
         if contacto_telefonico == "":
@@ -160,25 +142,28 @@ def adicionar_proprietario():
 
         try:
             # Interpretar o número, assumindo Portugal quando não existe indicativo
-            numero = phonenumbers.parse(contacto_telefonico, "PT")  # .parse() interpreta o número introduzido e separa as suas componentes: indicativo e número nacional
+            numero = phonenumbers.parse(contacto_telefonico, "PT")
 
             # Verificar se o número respeita as regras de numeração do país
             if not phonenumbers.is_valid_number(numero):
                 print("Contacto telefónico inválido.")
                 continue
 
-            # Guardar o número no formato internacional
-            # Formatar o contacto telefónico segundo o padrão internacional E.164, incluindo o indicativo do país e o número nacional, sem espaços.
+            # Guardar o número no formato internacional E.164, incluindo o indicativo do país, sem espaços
             contacto_telefonico = phonenumbers.format_number(numero, phonenumbers.PhoneNumberFormat.E164)
-            break
+            return contacto_telefonico
 
         except phonenumbers.NumberParseException:
             print("Número inválido. Verifique o indicativo e os algarismos introduzidos.")
-        
 
-    # Pedir e validar o email do proprietário
+
+def validar_email(edicao=False):
+    # Pedir e validar o email
     while True:
-        email = input("Email: ").strip()
+        if edicao:
+            email = input("\nNovo email: ").strip()
+        else:
+            email = input("Email: ").strip()
 
         # Verificar se o email está vazio
         if email == "":
@@ -231,15 +216,120 @@ def adicionar_proprietario():
             print("Email inválido. As partes do endereço não podem começar ou terminar com um ponto.")
             continue
 
-        # Verificar se a extensão do domínio contém pelo menos duas letras 
-        extensao = dominio.split(".")[-1]  #.split(".") divide o domínio em partes, utilizando o ponto como separador e [-1] obtem o último elemento da lista que fica guardado em extensão
+        # Verificar se a extensão do domínio contém pelo menos duas letras
+        extensao = dominio.split(".")[-1]
 
         if len(extensao) < 2 or not extensao.isascii() or not extensao.isalpha():
             print("Email inválido. A extensão do domínio deve conter pelo menos duas letras.")
             continue
 
         # Terminar o ciclo quando o email passa todas as validações
-        break
+        return email
+
+
+def validar_nif_novo():
+    # Pedir e validar o NIF no registo de um novo proprietário ou inquilino
+    while True:
+        nif = input("NIF: ").strip()  # Identificador guardado inicialmente como texto
+
+        # Verificar se o NIF contém exatamente 9 dígitos de 0 a 9
+        if len(nif) != 9 or not nif.isascii() or not nif.isdigit():
+            print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
+            continue
+
+        # Calcular o dígito de controlo do NIF para verificar se o NIF é matematicamente válido em Portugal
+        # Nota - o NIF português tem um dígito de controlo calculado a partir dos oito primeiros dígitos (módulo 11)
+        soma = 0
+        for i in range(8):
+            soma += int(nif[i]) * (9 - i)
+
+        resto = soma % 11
+        if resto < 2:
+            digito_controlo = 0
+        else:
+            digito_controlo = 11 - resto
+
+        # Comparar o dígito calculado com o último dígito do NIF
+        if digito_controlo != int(nif[8]):
+            print("NIF inválido. O dígito de controlo não está correto.")
+            continue
+
+        return nif
+
+
+def validar_ordenado(edicao=False):
+    # Pedir e validar o ordenado mensal do inquilino
+    while True:
+        try:
+            if edicao:
+                ordenado = float(input("\nNovo ordenado mensal (€): ").strip().replace(",", "."))
+            else:
+                ordenado = float(input("Ordenado mensal (€): ").strip().replace(",", "."))
+
+            # Verificar se o ordenado é finito: se for negativo, infinito ou NaN (Not a Number) é bloqueado
+            if ordenado < 0 or not math.isfinite(ordenado):  # Pode ser zero no registo, mas não permite arrendar um imóvel
+                print("O ordenado mensal deve ser um valor não negativo e finito.")
+                continue
+
+            return ordenado
+
+        except ValueError:
+            # Tratar entradas que não podem ser convertidas para números
+            print("Introduza um valor numérico válido para o ordenado.")
+
+
+def procurar_nif_existente(cursor, tabela, tipo_pessoa, operacao):
+    # Pedir o NIF até existir na base de dados ou o utilizador cancelar
+    # Não é necessário repetir o dígito de controlo: foi validado no registo
+    while True:
+        nif = input(f"NIF do {tipo_pessoa} (introduza apenas 0 para cancelar): ").strip()
+
+        if nif == "0":
+            print(f"\n{operacao} cancelada.")
+            return None
+
+        # Verificar se o NIF contém exatamente 9 dígitos
+        if len(nif) != 9 or not nif.isascii() or not nif.isdigit():
+            print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
+            continue
+
+        # Confirmar a existência na base de dados
+        cursor.execute(f"SELECT nome_completo FROM {tabela} WHERE nif = ?", (int(nif),))
+        pessoa = cursor.fetchone()
+
+        if pessoa is None:
+            print(f"\nNão existe nenhum {tipo_pessoa} registado com esse NIF.")
+            continue
+
+        return nif, pessoa[0]
+
+
+
+#####################################     FUNÇÕES PRINCIPAIS DE VALIDAÇÃO    ############################################################################################################################
+
+## Para os Proprietários: as funções de adicionar, consultar, editar e eliminar proprietários são definidas abaixo.
+
+def adicionar_proprietario():
+    # Recolher os dados do novo proprietário.
+    print("\n--- REGISTAR PROPRIETÁRIO ---")
+
+    # Pedir e validar o nome completo
+    nome = validar_nome()
+
+    # Pedir e validar o NIF
+    nif = validar_nif_novo()
+
+    # Pedir e validar a data de nascimento
+    data_nascimento = validar_data_nascimento("proprietário")
+
+    # Pedir e validar o sexo
+    sexo = validar_sexo()
+
+    # Pedir e validar o contacto telefónico
+    contacto_telefonico = validar_contacto_telefonico()
+
+    # Pedir e validar o email
+    email = validar_email()
 
     num_habitacoes = 0  # O proprietário começa sem imóveis registados
     
@@ -317,25 +407,12 @@ def consultar_proprietarios():
         # Fechar a ligação à base de dados, caso tenha sido estabelecida
         if conexao is not None:
             conexao.close()
+        
+        input("\nPressione Enter para voltar ao menu...")
 
 
 def editar_proprietarios():
     print("\n--- EDITAR DADOS DO PROPRIETÁRIO ---")
-
-    # Pedir e validar o NIF do proprietário que se pretende editar
-    while True:
-        nif = input("NIF do proprietário (introduza apenas 0 para cancelar): ").strip()
-
-        if nif == "0":
-            print("Edição cancelada.")
-            return
-
-        # Verificar se o NIF contém exatamente 9 dígitos
-        if len(nif) != 9 or not nif.isascii() or not nif.isdigit():
-            print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
-            continue
-
-        break
 
     # Inicializar a variável de ligação à base de dados
     conexao = None
@@ -345,22 +422,21 @@ def editar_proprietarios():
         conexao = sqlite3.connect(base_de_dados)
         cursor = conexao.cursor()
 
-        # Verificar se o proprietário existe
-        cursor.execute("SELECT nome_completo FROM proprietarios WHERE nif = ?", (int(nif),))
+        # Pedir e verificar o NIF do proprietário, repetindo a pergunta se não existir
+        resultado = procurar_nif_existente(cursor, "proprietarios", "proprietário", "Edição")
 
-        proprietario = cursor.fetchone()
-
-        if proprietario is None:
-            print("\nNão existe nenhum proprietário registado com esse NIF.")
+        if resultado is None:
             return
 
-        print(f"\nO proprietário como NIF {proprietario[0]} foi encontrado.")
+        nif, nome = resultado
+
+        print(f"\nProprietário encontrado: {nome}")
+        print(f"NIF: {nif}")
 
         # Apresentar os campos que podem ser alterados
         menu = [inquirer.Checkbox("campos",
                 message="Selecione os campos que pretende alterar",
-                choices=["1. Nome completo", "2. Data de nascimento", "3. Sexo", "4. Contacto telefónico", "5. Email"])
-        ]
+                choices=["1. Nome completo", "2. Data de nascimento", "3. Sexo", "4. Contacto telefónico", "5. Email"])]
 
         answers = inquirer.prompt(menu)
 
@@ -381,191 +457,25 @@ def editar_proprietarios():
         # Percorrer os campos selecionados e pedir os novos valores
         for campo in campos_selecionados:
 
-            ## Editar o nome completo
+            # Editar o nome completo
             if campo == "1. Nome completo":
-                while True:
-                    valor = input("\nNovo nome completo: ").strip()
+                novos_valores["nome_completo"] = validar_nome(edicao=True)
 
-                    if valor == "":
-                        print("O nome não pode estar vazio.")
-                        continue
-
-                    # Permitir apenas letras, espaços, apóstrofos e hífenes
-                    if not all(caracter.isalpha() or caracter in "-' " for caracter in valor):
-                        print("O nome deve conter apenas letras, espaços, apóstrofos e hífenes.")
-                        continue
-
-                    # Verificar se existem pelo menos duas palavras
-                    if len(valor.split()) < 2:
-                        print("O nome deve conter pelo menos duas palavras.")
-                        continue
-
-                    # Uniformizar o nome completo
-                    valor = " ".join(valor.split()).title()
-                    break
-
-                novos_valores["nome_completo"] = valor
-
-            ## Editar a data de nascimento
+            # Editar a data nascimento
             elif campo == "2. Data de nascimento":
-                while True:
-                    valor = input("\nNova data de nascimento (AAAA-MM-DD): ").strip()
-                    partes_data = valor.split("-")
+                novos_valores["data_nascimento"] = validar_data_nascimento("proprietário", edicao=True)
 
-                    # Verificar o formato AAAA-MM-DD
-                    if (len(partes_data) != 3 or
-                        len(partes_data[0]) != 4 or not partes_data[0].isascii() or not partes_data[0].isdigit() or
-                        len(partes_data[1]) != 2 or not partes_data[1].isascii() or not partes_data[1].isdigit() or
-                        len(partes_data[2]) != 2 or not partes_data[2].isascii() or not partes_data[2].isdigit()):
-
-                        print("Formato de data inválido. Utilize AAAA-MM-DD.")
-                        continue
-
-                    try:
-                        # Converter o texto numa data
-                        data = datetime.datetime.strptime(valor, "%Y-%m-%d").date()
-                        hoje = datetime.date.today()
-
-                        # Calcular a idade do proprietário
-                        idade = hoje.year - data.year
-
-                        if (hoje.month, hoje.day) < (data.month, data.day):
-                            idade -= 1
-
-                        if data > hoje:
-                            print("A data de nascimento não pode ser futura.")
-                            continue
-
-                        elif idade < 18:
-                            print("O proprietário deve ter pelo menos 18 anos.")
-                            continue
-
-                        break
-
-                    except ValueError:
-                        print("Data inválida. Verifique o dia, o mês e o ano.")
-
-                novos_valores["data_nascimento"] = valor
-
-            ## Editar o sexo
+            # Editar o sexo
             elif campo == "3. Sexo":
-                while True:
-                    valor = input("\nSexo (Masculino (M)/Feminino (F)/Outro (O)): ").strip().upper()
+                novos_valores["sexo"] = validar_sexo(edicao=True)
 
-                    if valor not in ["MASCULINO", "FEMININO", "OUTRO",
-                                     "MASCULINO (M)", "FEMININO (F)", "OUTRO (O)",
-                                     "MASCULINO(M)", "FEMININO(F)", "OUTRO(O)",
-                                     "M", "F", "O"]:
-                        print("Sexo inválido. Utilize Masculino (M), Feminino (F) ou Outro (O).")
-                        continue
-
-                    # Uniformizar os valores para M, F ou O
-                    if valor in ["MASCULINO", "MASCULINO (M)", "MASCULINO(M)"]:
-                        valor = "M"
-
-                    elif valor in ["FEMININO", "FEMININO (F)", "FEMININO(F)"]:
-                        valor = "F"
-
-                    elif valor in ["OUTRO", "OUTRO (O)", "OUTRO(O)"]:
-                        valor = "O"
-
-                    break
-
-                novos_valores["sexo"] = valor
-
-            ## Editar o contacto telefónico
+            # Editar o contacto telefonico
             elif campo == "4. Contacto telefónico":
-                while True:
-                    valor = input("\nNovo contacto telefónico (ex.: +351 912345678): ").strip()
+                novos_valores["contacto_telefonico"] = validar_contacto_telefonico(edicao=True)
 
-                    if valor == "":
-                        print("O contacto telefónico não pode estar vazio.")
-                        continue
-
-                    # Verificar os caracteres permitidos
-                    if (not all(caracter.isascii() and caracter.isdigit() or caracter == " "
-                                for caracter in valor.lstrip("+"))
-                        or valor.count("+") > 1
-                        or ("+" in valor and not valor.startswith("+"))):
-
-                        print("O contacto telefónico contém caracteres inválidos.")
-                        continue
-
-                    try:
-                        # Interpretar e validar o número
-                        numero = phonenumbers.parse(valor, "PT")
-
-                        if not phonenumbers.is_valid_number(numero):
-                            print("Contacto telefónico inválido.")
-                            continue
-
-                        # Guardar no formato internacional E.164
-                        valor = phonenumbers.format_number(
-                            numero, phonenumbers.PhoneNumberFormat.E164
-                        )
-                        break
-
-                    except phonenumbers.NumberParseException:
-                        print("Número inválido. Verifique o indicativo e os algarismos introduzidos.")
-
-                novos_valores["contacto_telefonico"] = valor
-
-            ## Editar o email
+            # Editar o email
             elif campo == "5. Email":
-                while True:
-                    valor = input("\nNovo email: ").strip()
-
-                    if valor == "":
-                        print("O email não pode estar vazio.")
-                        continue
-
-                    if valor.count("@") != 1:
-                        print("Email inválido. Deve conter exatamente um símbolo @.")
-                        continue
-
-                    utilizador, dominio = valor.split("@")
-
-                    if utilizador == "" or dominio == "":
-                        print("Email inválido. Introduza um endereço completo.")
-                        continue
-
-                    # Validar os caracteres do domínio
-                    if not all(caracter.isascii() and (caracter.isalnum() or caracter in ".-") for caracter in dominio):
-                        print("Email inválido. O domínio contém caracteres inválidos.")
-                        continue
-
-                    if any(caracter.isspace() for caracter in valor):
-                        print("O email não pode conter espaços.")
-                        continue
-
-                    if "." not in dominio:
-                        print("Email inválido. O domínio deve conter um ponto.")
-                        continue
-
-                    if ".." in valor:
-                        print("Email inválido. Não pode conter pontos consecutivos.")
-                        continue
-
-                    partes_dominio = dominio.split(".")
-
-                    if any(parte.startswith("-") or parte.endswith("-") for parte in partes_dominio):
-                        print("Email inválido. O domínio não pode começar ou terminar com hífenes.")
-                        continue
-
-                    if (utilizador.startswith(".") or utilizador.endswith(".")
-                        or dominio.startswith(".") or dominio.endswith(".")):
-                        print("Email inválido. As partes do endereço não podem começar ou terminar com um ponto.")
-                        continue
-
-                    extensao = dominio.split(".")[-1]
-
-                    if len(extensao) < 2 or not extensao.isascii() or not extensao.isalpha():
-                        print("Email inválido. A extensão do domínio deve conter pelo menos duas letras.")
-                        continue
-
-                    break
-
-                novos_valores["email"] = valor
+                novos_valores["email"] = validar_email(edicao=True)
 
         # Apresentar um resumo dos dados que vão ser alterados
         print("\n--- CONFIRMAR ALTERAÇÕES ---")
@@ -624,24 +534,12 @@ def editar_proprietarios():
         # Fechar a ligação à base de dados
         if conexao is not None:
             conexao.close()
+             # Aguardar que o utilizador pressione Enter antes de regressar ao menu
+
 
 
 def eliminar_proprietarios():
     print("\n--- ELIMINAR PROPRIETÁRIO ---")
-
-    # Pedir e validar o NIF do proprietário que se pretende eliminar
-    while True:
-        nif = input("NIF do proprietário (introduza apenas 0 para cancelar): ").strip()
-
-        if nif == "0":
-            print("\nEliminação cancelada.")
-            return
-
-        # Verificar se o NIF contém exatamente 9 dígitos
-        if len(nif) != 9 or not nif.isascii() or not nif.isdigit():
-            print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
-            continue
-        break
 
     # Inicializar a variável de ligação à base de dados
     conexao = None
@@ -655,16 +553,15 @@ def eliminar_proprietarios():
 
         cursor = conexao.cursor()
 
-        # Verificar se o proprietário existe na base de dados
-        cursor.execute("SELECT nome_completo FROM proprietarios WHERE nif = ?", (int(nif),))
+        # Pedir e verificar o NIF do proprietário, repetindo a pergunta se não existir
+        resultado = procurar_nif_existente(cursor, "proprietarios", "proprietário", "Eliminação")
 
-        proprietario = cursor.fetchone()
-
-        if proprietario is None:
-            print("\nNão existe nenhum proprietário registado com esse NIF.")
+        if resultado is None:
             return
 
-        print(f"\nProprietário encontrado: {proprietario[0]}")
+        nif, nome = resultado
+
+        print(f"\nProprietário encontrado: {nome}")
         print(f"NIF: {nif}")
 
         # Verificar se o proprietário tem imóveis associados
@@ -735,243 +632,27 @@ def adicionar_inquilino():
     # Recolher os dados do novo inquilino.
     print("\n--- REGISTAR INQUILINO ---")
 
-    # Pedir e validar o nome completo do inquilino
-    while True:
-        nome = input("Nome completo: ").strip()
+    # Pedir e validar o nome completo
+    nome = validar_nome()
 
-        # Verificar se o nome está vazio
-        if nome == "":
-            print("O nome não pode estar vazio.")
-            continue
-
-        # Permitir apenas letras, incluindo acentos, espaços, apóstrofos e hífenes
-        if not all(caracter.isalpha() or caracter in "-' " for caracter in nome):
-            print("O nome deve conter apenas letras, espaços, apóstrofos e hífenes.")
-            continue
-
-        # Verificar se o nome contém pelo menos duas palavras
-        if len(nome.split()) < 2:
-            print("Introduza o nome completo. O nome deve conter pelo menos duas palavras.")
-            continue
-
-        # Colocar a primeira letra de cada palavra em maiúscula
-        nome = " ".join(nome.split()).title()
-        break
-
-    # Pedir e validar o NIF do inquilino
-    while True:
-        nif = input("NIF: ").strip()
-
-        # Verificar se o NIF contém exatamente 9 dígitos de 0 a 9
-        if (len(nif) != 9 or not nif.isascii() or not nif.isdigit()):
-            print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
-            continue
-
-        # Calcular o dígito de controlo do NIF 
-        soma = 0  
-
-        # Multiplicar os primeiros 8 dígitos pelos pesos de 9 a 2
-        for i in range(8):
-            soma += int(nif[i]) * (9 - i)
-
-        # Calcular o resto da divisão da soma por 11
-        resto = soma % 11
-
-        # Determinar o dígito de controlo
-        if resto < 2:
-            digito_controlo = 0
-        else:
-            digito_controlo = 11 - resto
-
-        # Comparar o dígito calculado com o último dígito do NIF
-        if digito_controlo != int(nif[8]):
-            print("NIF inválido. O dígito de controlo não está correto.")
-            continue
-
-        # Terminar o ciclo quando o NIF passa as validações
-        break
+    # Pedir e validar o NIF
+    nif = validar_nif_novo()
 
     # Pedir e validar a data de nascimento
-    while True:
-        data_nascimento = input("Data de nascimento (AAAA-MM-DD): ").strip()
+    data_nascimento = validar_data_nascimento("inquilino")
 
-        partes_data = data_nascimento.split("-")
+    # Pedir e validar o sexo
+    sexo = validar_sexo()
 
-        # Verificar se a data respeita o formato AAAA-MM-DD
-        if (len(partes_data) != 3 or
-            len(partes_data[0]) != 4 or not partes_data[0].isascii() or not partes_data[0].isdigit() or
-            len(partes_data[1]) != 2 or not partes_data[1].isascii() or not partes_data[1].isdigit() or
-            len(partes_data[2]) != 2 or not partes_data[2].isascii() or not partes_data[2].isdigit()):
+    # Pedir e validar o contacto telefónico
+    contacto_telefonico = validar_contacto_telefonico()
 
-            print("Formato de data inválido. Utilize o formato AAAA-MM-DD.")
-            continue
+    # Pedir e validar o email
+    email = validar_email()
 
-        try:
-            # Converter o texto num objeto datetime e obter apenas a data
-            data = datetime.datetime.strptime(data_nascimento, "%Y-%m-%d").date()
+    # Pedir e validar o ordenado mensal
+    ordenado = validar_ordenado()
 
-            # Obter a data atual
-            hoje = datetime.date.today()
-
-            # Calcular a idade do inquilino
-            idade = hoje.year - data.year
-
-            # Subtrair um ano se ainda não tiver feito anos este ano
-            if (hoje.month, hoje.day) < (data.month, data.day):
-                idade -= 1
-
-            # Verificar se a data de nascimento não é futura
-            if data > hoje:
-                print("A data de nascimento não pode ser futura.")
-                continue
-
-            # Verificar se o inquilino tem pelo menos 18 anos
-            elif idade < 18:
-                print("O inquilino deve ter pelo menos 18 anos.")
-                continue
-
-            break
-
-        except ValueError:
-            # Tratar datas inexistentes, como 2002-02-30
-            print("Data inválida. Verifique o dia, o mês e o ano introduzidos.")
-
-    # Pedir e validar o sexo do inquilino
-    while True:
-        sexo = input("Sexo (Masculino (M)/Feminino (F)/Outro (O)): ").strip().upper()
-
-        # Verificar se a opção introduzida é válida
-        if sexo not in ["MASCULINO", "FEMININO", "OUTRO", "MASCULINO (M)", "FEMININO (F)", "OUTRO (O)", "MASCULINO(M)", "FEMININO(F)", "OUTRO(O)", "M", "F", "O"]:
-            print("Sexo inválido. Utilize Masculino (M), Feminino (F) ou Outro (O).")
-            continue
-
-        # Uniformizar os valores para guardar apenas M, F ou O
-        if sexo in ["MASCULINO", "MASCULINO (M)", "MASCULINO(M)"]:
-            sexo = "M"
-
-        elif sexo in ["FEMININO", "FEMININO (F)", "FEMININO(F)"]:
-            sexo = "F"
-
-        elif sexo in ["OUTRO", "OUTRO (O)", "OUTRO(O)"]:
-            sexo = "O"
-
-        break
-
-    # Pedir e validar o contacto telefónico do inquilino
-    # Permite números de telefone fixos e móveis, portugueses e estrangeiros
-    while True:
-        contacto_telefonico = input("Contacto telefónico (ex.: +351 912345678): ").strip()
-
-        # Verificar se o campo está vazio
-        if contacto_telefonico == "":
-            print("O contacto telefónico não pode estar vazio.")
-            continue
-
-        # Verificar se contém apenas algarismos, espaços e o sinal + inicial
-        if not all(caracter.isascii() and caracter.isdigit() or caracter == " " for caracter in contacto_telefonico.lstrip("+")) or contacto_telefonico.count("+") > 1 or ("+" in contacto_telefonico and not contacto_telefonico.startswith("+")):
-            print("O contacto telefónico contém caracteres inválidos.")
-            continue
-
-        try:
-            # Interpretar o número, assumindo Portugal quando não existe indicativo
-            numero = phonenumbers.parse(contacto_telefonico, "PT")
-
-            # Verificar se o número respeita as regras de numeração do país
-            if not phonenumbers.is_valid_number(numero):
-                print("Contacto telefónico inválido.")
-                continue
-
-            # Guardar o número no formato internacional E.164, incluindo o indicativo do país, sem espaços
-            contacto_telefonico = phonenumbers.format_number(numero, phonenumbers.PhoneNumberFormat.E164)
-            break
-
-        except phonenumbers.NumberParseException:
-            print("Número inválido. Verifique o indicativo e os algarismos introduzidos.")
-
-    # Pedir e validar o email do inquilino
-    while True:
-        email = input("Email: ").strip()
-
-        # Verificar se o email está vazio
-        if email == "":
-            print("O email não pode estar vazio.")
-            continue
-
-        # Verificar se contém exatamente um símbolo @
-        if email.count("@") != 1:
-            print("Email inválido. Deve conter exatamente um símbolo @.")
-            continue
-
-        # Separar o email na parte anterior e posterior ao @
-        utilizador, dominio = email.split("@")
-
-        # Verificar se ambas as partes estão preenchidas
-        if utilizador == "" or dominio == "":
-            print("Email inválido. Introduza um endereço completo.")
-            continue
-
-        # Verificar se o domínio contém apenas letras, números, pontos e hífenes
-        if not all(caracter.isascii() and (caracter.isalnum() or caracter in ".-") for caracter in dominio):
-            print("Email inválido. O domínio contém caracteres inválidos.")
-            continue
-
-        # Verificar se existem espaços no email
-        if any(caracter.isspace() for caracter in email):
-            print("O email não pode conter espaços.")
-            continue
-
-        # Verificar se o domínio contém um ponto
-        if "." not in dominio:
-            print("Email inválido. O domínio deve conter um ponto.")
-            continue
-
-        # Verificar se existem pontos consecutivos
-        if ".." in email:
-            print("Email inválido. Não pode conter pontos consecutivos.")
-            continue
-
-        # Separar o domínio em partes para verificar os hífenes
-        partes_dominio = dominio.split(".")
-
-        # Verificar se alguma parte começa ou termina com hífen
-        if any(parte.startswith("-") or parte.endswith("-") for parte in partes_dominio):
-            print("Email inválido. O domínio não pode começar ou terminar com hífenes.")
-            continue
-
-        # Verificar se as partes do email começam ou terminam com pontos
-        if utilizador.startswith(".") or utilizador.endswith(".") or dominio.startswith(".") or dominio.endswith("."):
-            print("Email inválido. As partes do endereço não podem começar ou terminar com um ponto.")
-            continue
-
-        # Obter a extensão do domínio (última parte após o ponto)
-        extensao = dominio.split(".")[-1]
-
-        # Verificar se a extensão contém pelo menos duas letras
-        if len(extensao) < 2 or not extensao.isascii() or not extensao.isalpha():
-            print("Email inválido. A extensão do domínio deve conter pelo menos duas letras.")
-            continue
-
-        break
-
-    # Pedir e validar o ordenado mensal do inquilino
-    while True:
-        try:
-            # Converter o valor introduzido num número decimal
-            ordenado = float(input("Ordenado mensal (€): ").strip().replace(",", ".")) # .replace(",", ".") permite introduzir a vírgula como separador decimal
-
-            # Verificar se o ordenado é finito: se for negativo, infinito ou NaN (Not a Number) é bloqueado
-            if ordenado < 0 or not math.isfinite(ordenado): # ordenado pode ser zero ao adicionar o inquilino na base de dados, mas nao o vai permitir arrendar um imovel
-                print("O ordenado deve ser um valor não negativo e finito.")
-                continue
-
-            # Terminar o ciclo quando o ordenado passa todas as validações
-            break
-
-        except ValueError:
-            # Tratar entradas que não podem ser convertidas para números
-            print("Introduza um valor numérico válido para o ordenado.")
-
-    
     # Inicializar a variável de ligação à base de dados antes do try para verificar no finally se a ligação foi estabelecida
     conexao = None
     try:
@@ -1047,24 +728,11 @@ def consultar_inquilinos():
         if conexao is not None:
             conexao.close()
 
+        input("\nPressione Enter para voltar ao menu...")
+
 
 def editar_inquilinos():
     print("\n--- EDITAR DADOS DO INQUILINO ---")
-
-    # Pedir e validar o NIF do inquilino que se pretende editar
-    while True:
-        nif = input("NIF do inquilino (introduza apenas 0 para cancelar): ").strip()
-
-        if nif == "0":
-            print("Edição cancelada.")
-            return
-
-        # Verificar se o NIF contém exatamente 9 dígitos
-        if len(nif) != 9 or not nif.isascii() or not nif.isdigit():
-            print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
-            continue
-
-        break
 
     # Inicializar a variável de ligação à base de dados
     conexao = None
@@ -1074,16 +742,15 @@ def editar_inquilinos():
         conexao = sqlite3.connect(base_de_dados)
         cursor = conexao.cursor()
 
-        # Verificar se o inquilino existe na base de dados
-        cursor.execute("SELECT nome_completo FROM inquilinos WHERE nif = ?", (int(nif),))
+        # Pedir e verificar o NIF do inquilino, repetindo a pergunta se não existir
+        resultado = procurar_nif_existente(cursor, "inquilinos", "inquilino", "Edição")
 
-        inquilino = cursor.fetchone()
-
-        if inquilino is None:
-            print("\nNão existe nenhum inquilino registado com esse NIF.")
+        if resultado is None:
             return
 
-        print(f"\nInquilino encontrado: {inquilino[0]}")
+        nif, nome = resultado
+
+        print(f"\nInquilino encontrado: {nome}")
         print(f"NIF: {nif}")
 
         # Apresentar os campos que podem ser alterados
@@ -1113,211 +780,27 @@ def editar_inquilinos():
 
             # Editar o nome completo
             if campo == "1. Nome completo":
-                while True:
-                    valor = input("\nNovo nome completo: ").strip()
+                novos_valores["nome_completo"] = validar_nome(edicao=True)
 
-                    if valor == "":
-                        print("O nome não pode estar vazio.")
-                        continue
-
-                    # Permitir apenas letras, espaços, apóstrofos e hífenes
-                    if not all(caracter.isalpha() or caracter in "-' " for caracter in valor):
-                        print("O nome deve conter apenas letras, espaços, apóstrofos e hífenes.")
-                        continue
-
-                    # Verificar se existem pelo menos duas palavras
-                    if len(valor.split()) < 2:
-                        print("O nome deve conter pelo menos duas palavras.")
-                        continue
-
-                    # Uniformizar o nome completo
-                    valor = " ".join(valor.split()).title()
-                    break
-
-                novos_valores["nome_completo"] = valor
-
-            # Editar a data de nascimento
+            # Editar a data nascimento
             elif campo == "2. Data de nascimento":
-                while True:
-                    valor = input("\nNova data de nascimento (AAAA-MM-DD): ").strip()
-                    partes_data = valor.split("-")
-
-                    # Verificar o formato AAAA-MM-DD
-                    if (len(partes_data) != 3 or
-                        len(partes_data[0]) != 4 or not partes_data[0].isascii() or not partes_data[0].isdigit() or
-                        len(partes_data[1]) != 2 or not partes_data[1].isascii() or not partes_data[1].isdigit() or
-                        len(partes_data[2]) != 2 or not partes_data[2].isascii() or not partes_data[2].isdigit()):
-
-                        print("Formato de data inválido. Utilize AAAA-MM-DD.")
-                        continue
-
-                    try:
-                        # Converter o texto numa data
-                        data = datetime.datetime.strptime(valor, "%Y-%m-%d").date()
-                        hoje = datetime.date.today()
-
-                        # Calcular a idade do inquilino
-                        idade = hoje.year - data.year
-
-                        if (hoje.month, hoje.day) < (data.month, data.day):
-                            idade -= 1
-
-                        if data > hoje:
-                            print("A data de nascimento não pode ser futura.")
-                            continue
-
-                        elif idade < 18:
-                            print("O inquilino deve ter pelo menos 18 anos.")
-                            continue
-
-                        break
-
-                    except ValueError:
-                        print("Data inválida. Verifique o dia, o mês e o ano.")
-
-                novos_valores["data_nascimento"] = valor
+                novos_valores["data_nascimento"] = validar_data_nascimento("inquilino", edicao=True)
 
             # Editar o sexo
             elif campo == "3. Sexo":
-                while True:
-                    valor = input("\nSexo (Masculino (M)/Feminino (F)/Outro (O)): ").strip().upper()
+                novos_valores["sexo"] = validar_sexo(edicao=True)
 
-                    if valor not in ["MASCULINO", "FEMININO", "OUTRO",
-                                     "MASCULINO (M)", "FEMININO (F)", "OUTRO (O)",
-                                     "MASCULINO(M)", "FEMININO(F)", "OUTRO(O)",
-                                     "M", "F", "O"]:
-                        print("Sexo inválido. Utilize Masculino (M), Feminino (F) ou Outro (O).")
-                        continue
-
-                    # Uniformizar os valores para M, F ou O
-                    if valor in ["MASCULINO", "MASCULINO (M)", "MASCULINO(M)"]:
-                        valor = "M"
-
-                    elif valor in ["FEMININO", "FEMININO (F)", "FEMININO(F)"]:
-                        valor = "F"
-
-                    elif valor in ["OUTRO", "OUTRO (O)", "OUTRO(O)"]:
-                        valor = "O"
-
-                    break
-
-                novos_valores["sexo"] = valor
-
-            # Editar o contacto telefónico
+            # Editar o contacto telefonico
             elif campo == "4. Contacto telefónico":
-                while True:
-                    valor = input("\nNovo contacto telefónico (ex.: +351 912345678): ").strip()
-
-                    if valor == "":
-                        print("O contacto telefónico não pode estar vazio.")
-                        continue
-
-                    # Verificar os caracteres permitidos
-                    if (not all(caracter.isascii() and caracter.isdigit() or caracter == " "
-                                for caracter in valor.lstrip("+"))
-                        or valor.count("+") > 1
-                        or ("+" in valor and not valor.startswith("+"))):
-
-                        print("O contacto telefónico contém caracteres inválidos.")
-                        continue
-
-                    try:
-                        # Interpretar e validar o número
-                        numero = phonenumbers.parse(valor, "PT")
-
-                        if not phonenumbers.is_valid_number(numero):
-                            print("Contacto telefónico inválido.")
-                            continue
-
-                        # Guardar no formato internacional E.164
-                        valor = phonenumbers.format_number(
-                            numero, phonenumbers.PhoneNumberFormat.E164
-                        )
-                        break
-
-                    except phonenumbers.NumberParseException:
-                        print("Número inválido. Verifique o indicativo e os algarismos introduzidos.")
-
-                novos_valores["contacto_telefonico"] = valor
+                novos_valores["contacto_telefonico"] = validar_contacto_telefonico(edicao=True)
 
             # Editar o email
             elif campo == "5. Email":
-                while True:
-                    valor = input("\nNovo email: ").strip()
-
-                    if valor == "":
-                        print("O email não pode estar vazio.")
-                        continue
-
-                    if valor.count("@") != 1:
-                        print("Email inválido. Deve conter exatamente um símbolo @.")
-                        continue
-
-                    utilizador, dominio = valor.split("@")
-
-                    if utilizador == "" or dominio == "":
-                        print("Email inválido. Introduza um endereço completo.")
-                        continue
-
-                    # Validar os caracteres do domínio
-                    if not all(caracter.isascii() and (caracter.isalnum() or caracter in ".-") for caracter in dominio):
-                        print("Email inválido. O domínio contém caracteres inválidos.")
-                        continue
-
-                    if any(caracter.isspace() for caracter in valor):
-                        print("O email não pode conter espaços.")
-                        continue
-
-                    if "." not in dominio:
-                        print("Email inválido. O domínio deve conter um ponto.")
-                        continue
-
-                    if ".." in valor:
-                        print("Email inválido. Não pode conter pontos consecutivos.")
-                        continue
-
-                    partes_dominio = dominio.split(".")
-
-                    if any(parte.startswith("-") or parte.endswith("-") for parte in partes_dominio):
-                        print("Email inválido. O domínio não pode começar ou terminar com hífenes.")
-                        continue
-
-                    if (utilizador.startswith(".") or utilizador.endswith(".")
-                        or dominio.startswith(".") or dominio.endswith(".")):
-
-                        print("Email inválido. As partes do endereço não podem começar ou terminar com um ponto.")
-                        continue
-
-                    extensao = dominio.split(".")[-1]
-
-                    if len(extensao) < 2 or not extensao.isascii() or not extensao.isalpha():
-                        print("Email inválido. A extensão do domínio deve conter pelo menos duas letras.")
-                        continue
-
-                    break
-
-                novos_valores["email"] = valor
+                novos_valores["email"] = validar_email(edicao=True)
 
             # Editar o ordenado mensal
             elif campo == "6. Ordenado mensal":
-                while True:
-                    valor = input("\nNovo ordenado mensal (€): ").strip()
-
-                    try:
-                        # Permitir a introdução de valores com vírgula ou ponto
-                        ordenado = float(valor.replace(",", "."))
-
-                        # Impedir valores negativos ou não finitos
-                        if ordenado < 0 or not math.isfinite(ordenado):
-                            print("O ordenado mensal deve ser um valor não negativo e finito.")
-                            continue
-
-                        break
-
-                    except ValueError:
-                        print("Ordenado inválido. Introduza um valor numérico válido.")
-
-                novos_valores["ordenado_mensal"] = ordenado
+                novos_valores["ordenado_mensal"] = validar_ordenado(edicao=True)
 
         # Apresentar um resumo dos dados que vão ser alterados
         print("\n--- CONFIRMAR ALTERAÇÕES ---")
@@ -1385,21 +868,6 @@ def editar_inquilinos():
 def eliminar_inquilinos():
     print("\n--- ELIMINAR INQUILINO ---")
 
-    # Pedir e validar o NIF do inquilino que se pretende eliminar
-    while True:
-        nif = input("NIF do inquilino (introduza apenas 0 para cancelar): ").strip()
-
-        if nif == "0":
-            print("\nEliminação cancelada.")
-            return
-
-        # Verificar se o NIF contém exatamente 9 dígitos
-        if len(nif) != 9 or not nif.isascii() or not nif.isdigit():
-            print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
-            continue
-
-        break
-
     # Inicializar a variável de ligação à base de dados
     conexao = None
 
@@ -1412,19 +880,15 @@ def eliminar_inquilinos():
 
         cursor = conexao.cursor()
 
-        # Verificar se o inquilino existe na base de dados
-        cursor.execute(
-            "SELECT nome_completo FROM inquilinos WHERE nif = ?",
-            (int(nif),)
-        )
+        # Pedir e verificar o NIF do inquilino, repetindo a pergunta se não existir
+        resultado = procurar_nif_existente(cursor, "inquilinos", "inquilino", "Eliminação")
 
-        inquilino = cursor.fetchone()
-
-        if inquilino is None:
-            print("\nNão existe nenhum inquilino registado com esse NIF.")
+        if resultado is None:
             return
 
-        print(f"\nInquilino encontrado: {inquilino[0]}")
+        nif, nome = resultado
+
+        print(f"\nInquilino encontrado: {nome}")
         print(f"NIF: {nif}")
 
         # Verificar se o inquilino tem imóveis associados
