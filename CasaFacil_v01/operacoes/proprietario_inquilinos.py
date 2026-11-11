@@ -3,6 +3,7 @@ import datetime
 import os
 import sqlite3
 import math
+import inquirer
 
 pasta_programa = os.path.dirname(os.path.abspath(__file__))
 
@@ -10,7 +11,7 @@ pasta_programa = os.path.dirname(os.path.abspath(__file__))
 # os.path.join() junta o caminho da pasta ao nome do ficheiro
 base_de_dados = os.path.join(pasta_programa, "../casa_facil.db")
 
-## Para os Proprietários: as funções de adicionar e consultar proprietários são definidas abaixo.
+## Para os Proprietários: as funções de adicionar, consultar, editar e eliminar proprietários são definidas abaixo.
 
 def adicionar_proprietario():
     # Recolher os dados do novo proprietário.
@@ -317,9 +318,417 @@ def consultar_proprietarios():
         if conexao is not None:
             conexao.close()
 
+
+def editar_proprietarios():
+    print("\n--- EDITAR DADOS DO PROPRIETÁRIO ---")
+
+    # Pedir e validar o NIF do proprietário que se pretende editar
+    while True:
+        nif = input("NIF do proprietário (introduza apenas 0 para cancelar): ").strip()
+
+        if nif == "0":
+            print("Edição cancelada.")
+            return
+
+        # Verificar se o NIF contém exatamente 9 dígitos
+        if len(nif) != 9 or not nif.isascii() or not nif.isdigit():
+            print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
+            continue
+
+        break
+
+    # Inicializar a variável de ligação à base de dados
+    conexao = None
+
+    try:
+        # Estabelecer ligação à base de dados
+        conexao = sqlite3.connect(base_de_dados)
+        cursor = conexao.cursor()
+
+        # Verificar se o proprietário existe
+        cursor.execute("SELECT nome_completo FROM proprietarios WHERE nif = ?", (int(nif),))
+
+        proprietario = cursor.fetchone()
+
+        if proprietario is None:
+            print("\nNão existe nenhum proprietário registado com esse NIF.")
+            return
+
+        print(f"\nO proprietário como NIF {proprietario[0]} foi encontrado.")
+
+        # Apresentar os campos que podem ser alterados
+        menu = [inquirer.Checkbox("campos",
+                message="Selecione os campos que pretende alterar",
+                choices=["1. Nome completo", "2. Data de nascimento", "3. Sexo", "4. Contacto telefónico", "5. Email"])
+        ]
+
+        answers = inquirer.prompt(menu)
+
+        # Cancelar a edição se o utilizador interromper o menu
+        if answers is None:
+            print("\nEdição cancelada.")
+            return
+
+        campos_selecionados = answers["campos"]
+
+        # Verificar se foi selecionado pelo menos um campo
+        if len(campos_selecionados) == 0:
+            print("\nNão selecionou nenhum campo para alterar.")
+            return
+
+        novos_valores = {} # Guardar os novos valores num dicionário
+
+        # Percorrer os campos selecionados e pedir os novos valores
+        for campo in campos_selecionados:
+
+            ## Editar o nome completo
+            if campo == "1. Nome completo":
+                while True:
+                    valor = input("\nNovo nome completo: ").strip()
+
+                    if valor == "":
+                        print("O nome não pode estar vazio.")
+                        continue
+
+                    # Permitir apenas letras, espaços, apóstrofos e hífenes
+                    if not all(caracter.isalpha() or caracter in "-' " for caracter in valor):
+                        print("O nome deve conter apenas letras, espaços, apóstrofos e hífenes.")
+                        continue
+
+                    # Verificar se existem pelo menos duas palavras
+                    if len(valor.split()) < 2:
+                        print("O nome deve conter pelo menos duas palavras.")
+                        continue
+
+                    # Uniformizar o nome completo
+                    valor = " ".join(valor.split()).title()
+                    break
+
+                novos_valores["nome_completo"] = valor
+
+            ## Editar a data de nascimento
+            elif campo == "2. Data de nascimento":
+                while True:
+                    valor = input("\nNova data de nascimento (AAAA-MM-DD): ").strip()
+                    partes_data = valor.split("-")
+
+                    # Verificar o formato AAAA-MM-DD
+                    if (len(partes_data) != 3 or
+                        len(partes_data[0]) != 4 or not partes_data[0].isascii() or not partes_data[0].isdigit() or
+                        len(partes_data[1]) != 2 or not partes_data[1].isascii() or not partes_data[1].isdigit() or
+                        len(partes_data[2]) != 2 or not partes_data[2].isascii() or not partes_data[2].isdigit()):
+
+                        print("Formato de data inválido. Utilize AAAA-MM-DD.")
+                        continue
+
+                    try:
+                        # Converter o texto numa data
+                        data = datetime.datetime.strptime(valor, "%Y-%m-%d").date()
+                        hoje = datetime.date.today()
+
+                        # Calcular a idade do proprietário
+                        idade = hoje.year - data.year
+
+                        if (hoje.month, hoje.day) < (data.month, data.day):
+                            idade -= 1
+
+                        if data > hoje:
+                            print("A data de nascimento não pode ser futura.")
+                            continue
+
+                        elif idade < 18:
+                            print("O proprietário deve ter pelo menos 18 anos.")
+                            continue
+
+                        break
+
+                    except ValueError:
+                        print("Data inválida. Verifique o dia, o mês e o ano.")
+
+                novos_valores["data_nascimento"] = valor
+
+            ## Editar o sexo
+            elif campo == "3. Sexo":
+                while True:
+                    valor = input("\nSexo (Masculino (M)/Feminino (F)/Outro (O)): ").strip().upper()
+
+                    if valor not in ["MASCULINO", "FEMININO", "OUTRO",
+                                     "MASCULINO (M)", "FEMININO (F)", "OUTRO (O)",
+                                     "MASCULINO(M)", "FEMININO(F)", "OUTRO(O)",
+                                     "M", "F", "O"]:
+                        print("Sexo inválido. Utilize Masculino (M), Feminino (F) ou Outro (O).")
+                        continue
+
+                    # Uniformizar os valores para M, F ou O
+                    if valor in ["MASCULINO", "MASCULINO (M)", "MASCULINO(M)"]:
+                        valor = "M"
+
+                    elif valor in ["FEMININO", "FEMININO (F)", "FEMININO(F)"]:
+                        valor = "F"
+
+                    elif valor in ["OUTRO", "OUTRO (O)", "OUTRO(O)"]:
+                        valor = "O"
+
+                    break
+
+                novos_valores["sexo"] = valor
+
+            ## Editar o contacto telefónico
+            elif campo == "4. Contacto telefónico":
+                while True:
+                    valor = input("\nNovo contacto telefónico (ex.: +351 912345678): ").strip()
+
+                    if valor == "":
+                        print("O contacto telefónico não pode estar vazio.")
+                        continue
+
+                    # Verificar os caracteres permitidos
+                    if (not all(caracter.isascii() and caracter.isdigit() or caracter == " "
+                                for caracter in valor.lstrip("+"))
+                        or valor.count("+") > 1
+                        or ("+" in valor and not valor.startswith("+"))):
+
+                        print("O contacto telefónico contém caracteres inválidos.")
+                        continue
+
+                    try:
+                        # Interpretar e validar o número
+                        numero = phonenumbers.parse(valor, "PT")
+
+                        if not phonenumbers.is_valid_number(numero):
+                            print("Contacto telefónico inválido.")
+                            continue
+
+                        # Guardar no formato internacional E.164
+                        valor = phonenumbers.format_number(
+                            numero, phonenumbers.PhoneNumberFormat.E164
+                        )
+                        break
+
+                    except phonenumbers.NumberParseException:
+                        print("Número inválido. Verifique o indicativo e os algarismos introduzidos.")
+
+                novos_valores["contacto_telefonico"] = valor
+
+            ## Editar o email
+            elif campo == "5. Email":
+                while True:
+                    valor = input("\nNovo email: ").strip()
+
+                    if valor == "":
+                        print("O email não pode estar vazio.")
+                        continue
+
+                    if valor.count("@") != 1:
+                        print("Email inválido. Deve conter exatamente um símbolo @.")
+                        continue
+
+                    utilizador, dominio = valor.split("@")
+
+                    if utilizador == "" or dominio == "":
+                        print("Email inválido. Introduza um endereço completo.")
+                        continue
+
+                    # Validar os caracteres do domínio
+                    if not all(caracter.isascii() and (caracter.isalnum() or caracter in ".-") for caracter in dominio):
+                        print("Email inválido. O domínio contém caracteres inválidos.")
+                        continue
+
+                    if any(caracter.isspace() for caracter in valor):
+                        print("O email não pode conter espaços.")
+                        continue
+
+                    if "." not in dominio:
+                        print("Email inválido. O domínio deve conter um ponto.")
+                        continue
+
+                    if ".." in valor:
+                        print("Email inválido. Não pode conter pontos consecutivos.")
+                        continue
+
+                    partes_dominio = dominio.split(".")
+
+                    if any(parte.startswith("-") or parte.endswith("-") for parte in partes_dominio):
+                        print("Email inválido. O domínio não pode começar ou terminar com hífenes.")
+                        continue
+
+                    if (utilizador.startswith(".") or utilizador.endswith(".")
+                        or dominio.startswith(".") or dominio.endswith(".")):
+                        print("Email inválido. As partes do endereço não podem começar ou terminar com um ponto.")
+                        continue
+
+                    extensao = dominio.split(".")[-1]
+
+                    if len(extensao) < 2 or not extensao.isascii() or not extensao.isalpha():
+                        print("Email inválido. A extensão do domínio deve conter pelo menos duas letras.")
+                        continue
+
+                    break
+
+                novos_valores["email"] = valor
+
+        # Apresentar um resumo dos dados que vão ser alterados
+        print("\n--- CONFIRMAR ALTERAÇÕES ---")
+        print(f"NIF do proprietário: {nif}")
+
+        for coluna, valor in novos_valores.items():
+            print(f"{coluna}: {valor}")
+
+        # Pedir confirmação antes de atualizar a base de dados
+        confirmacao = [inquirer.List("confirmar",
+            message="Confirma que pretende guardar todas estas alterações?",
+            choices=["Sim", "Não"],
+            default="Não")]  
+
+        resposta = inquirer.prompt(confirmacao)
+
+        # Cancelar sem guardar qualquer alteração
+        if resposta is None or resposta["confirmar"] == "Não":
+            print("\nEdição cancelada. Nenhum dado foi alterado.")
+            return
+
+        # Preparar os campos a atualizar na instrução SQL
+        atualizacoes = []
+
+        for coluna in novos_valores:
+            atualizacoes.append(f"{coluna} = ?")
+
+        # Juntar os campos separados por vírgulas
+        campos_sql = ", ".join(atualizacoes)
+
+        # Obter os novos valores pela mesma ordem dos campos
+        valores_sql = list(novos_valores.values())
+
+        # Acrescentar o NIF para identificar o proprietário
+        valores_sql.append(int(nif))
+
+        # Atualizar todos os campos selecionados numa única instrução SQL
+        cursor.execute(
+            f"UPDATE proprietarios SET {campos_sql} WHERE nif = ?",
+            valores_sql
+        )
+
+        # Guardar todas as alterações na base de dados
+        conexao.commit()
+
+        print("\nDados do proprietário atualizados com sucesso!")
+
+    except sqlite3.Error as e:
+        # Tratar erros relacionados com a base de dados
+        print(f"\nErro ao editar proprietário: {e}")
+
+        if conexao is not None:
+            conexao.rollback()
+
+    finally:
+        # Fechar a ligação à base de dados
+        if conexao is not None:
+            conexao.close()
+
+
+def eliminar_proprietarios():
+    print("\n--- ELIMINAR PROPRIETÁRIO ---")
+
+    # Pedir e validar o NIF do proprietário que se pretende eliminar
+    while True:
+        nif = input("NIF do proprietário (introduza apenas 0 para cancelar): ").strip()
+
+        if nif == "0":
+            print("\nEliminação cancelada.")
+            return
+
+        # Verificar se o NIF contém exatamente 9 dígitos
+        if len(nif) != 9 or not nif.isascii() or not nif.isdigit():
+            print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
+            continue
+        break
+
+    # Inicializar a variável de ligação à base de dados
+    conexao = None
+
+    try:
+        # Estabelecer ligação à base de dados
+        conexao = sqlite3.connect(base_de_dados)
+
+        # Ativar a verificação das chaves estrangeiras
+        conexao.execute("PRAGMA foreign_keys = ON")
+
+        cursor = conexao.cursor()
+
+        # Verificar se o proprietário existe na base de dados
+        cursor.execute("SELECT nome_completo FROM proprietarios WHERE nif = ?", (int(nif),))
+
+        proprietario = cursor.fetchone()
+
+        if proprietario is None:
+            print("\nNão existe nenhum proprietário registado com esse NIF.")
+            return
+
+        print(f"\nProprietário encontrado: {proprietario[0]}")
+        print(f"NIF: {nif}")
+
+        # Verificar se o proprietário tem imóveis associados
+        cursor.execute("SELECT COUNT(*) FROM imoveis WHERE nif_proprietario = ?", (int(nif),))
+
+        numero_imoveis = cursor.fetchone()[0]
+
+        # Impedir a eliminação se existirem imóveis associados
+        if numero_imoveis > 0:
+            print("\nNão é possível eliminar este proprietário.")
+
+            if numero_imoveis == 1:
+                print("Existe 1 imóvel associado a este proprietário.")
+            else:
+                print(f"Existem {numero_imoveis} imóveis associados a este proprietário.")
+
+            print("É necessário eliminar primeiro os imóveis associados.")
+            return
+
+        # Pedir confirmação antes de eliminar o proprietário
+        confirmacao = [inquirer.List("confirmar",
+                message="Confirma que pretende eliminar este proprietário?",
+                choices=["Sim", "Não"],
+                default="Não")
+        ]
+
+        resposta = inquirer.prompt(confirmacao)
+
+        # Cancelar a operação se o utilizador selecionar Não ou interromper o menu
+        if resposta is None or resposta["confirmar"] == "Não":
+            print("\nEliminação cancelada. Nenhum dado foi eliminado.")
+            return
+
+        # Eliminar o proprietário identificado pelo NIF
+        cursor.execute("DELETE FROM proprietarios WHERE nif = ?", (int(nif),))
+
+        # Guardar a alteração na base de dados
+        conexao.commit()
+
+        print("\nProprietário eliminado com sucesso!")
+
+    except sqlite3.IntegrityError:
+        # Impedir a eliminação caso existam outras relações protegidas
+        print("\nNão foi possível eliminar o proprietário.")
+        print("Existem registos associados que impedem a eliminação.")
+
+        if conexao is not None:
+            conexao.rollback()
+
+    except sqlite3.Error as e:
+        # Tratar outros erros relacionados com a base de dados
+        print(f"\nErro ao eliminar proprietário: {e}")
+
+        if conexao is not None:
+            conexao.rollback()
+
+    finally:
+        # Fechar a ligação à base de dados
+        if conexao is not None:
+            conexao.close()
+
 #####################################################################################################################################################
 
-## Para os Inquilinos: as funções de adicionar e consultar inquilinos são definidas abaixo.
+## Para os Inquilinos: as funções de adicionar, consultar, editar e eliminar inquilinos são definidas abaixo.
 
 
 def adicionar_inquilino():
@@ -638,3 +1047,444 @@ def consultar_inquilinos():
         if conexao is not None:
             conexao.close()
 
+
+def editar_inquilinos():
+    print("\n--- EDITAR DADOS DO INQUILINO ---")
+
+    # Pedir e validar o NIF do inquilino que se pretende editar
+    while True:
+        nif = input("NIF do inquilino (introduza apenas 0 para cancelar): ").strip()
+
+        if nif == "0":
+            print("Edição cancelada.")
+            return
+
+        # Verificar se o NIF contém exatamente 9 dígitos
+        if len(nif) != 9 or not nif.isascii() or not nif.isdigit():
+            print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
+            continue
+
+        break
+
+    # Inicializar a variável de ligação à base de dados
+    conexao = None
+
+    try:
+        # Estabelecer ligação à base de dados
+        conexao = sqlite3.connect(base_de_dados)
+        cursor = conexao.cursor()
+
+        # Verificar se o inquilino existe na base de dados
+        cursor.execute("SELECT nome_completo FROM inquilinos WHERE nif = ?", (int(nif),))
+
+        inquilino = cursor.fetchone()
+
+        if inquilino is None:
+            print("\nNão existe nenhum inquilino registado com esse NIF.")
+            return
+
+        print(f"\nInquilino encontrado: {inquilino[0]}")
+        print(f"NIF: {nif}")
+
+        # Apresentar os campos que podem ser alterados
+        menu = [inquirer.Checkbox("campos",
+                message="Selecione os campos que pretende alterar",
+                choices=["1. Nome completo", "2. Data de nascimento", "3. Sexo", "4. Contacto telefónico", "5. Email", "6. Ordenado mensal"])
+        ]
+
+        answers = inquirer.prompt(menu)
+
+        # Cancelar a edição se o utilizador interromper o menu
+        if answers is None:
+            print("\nEdição cancelada.")
+            return
+
+        campos_selecionados = answers["campos"]
+
+        # Verificar se foi selecionado pelo menos um campo
+        if len(campos_selecionados) == 0:
+            print("\nNão selecionou nenhum campo para alterar.")
+            return
+
+        novos_valores = {}  # Guardar os novos valores num dicionário
+
+        # Percorrer os campos selecionados e pedir os novos valores
+        for campo in campos_selecionados:
+
+            # Editar o nome completo
+            if campo == "1. Nome completo":
+                while True:
+                    valor = input("\nNovo nome completo: ").strip()
+
+                    if valor == "":
+                        print("O nome não pode estar vazio.")
+                        continue
+
+                    # Permitir apenas letras, espaços, apóstrofos e hífenes
+                    if not all(caracter.isalpha() or caracter in "-' " for caracter in valor):
+                        print("O nome deve conter apenas letras, espaços, apóstrofos e hífenes.")
+                        continue
+
+                    # Verificar se existem pelo menos duas palavras
+                    if len(valor.split()) < 2:
+                        print("O nome deve conter pelo menos duas palavras.")
+                        continue
+
+                    # Uniformizar o nome completo
+                    valor = " ".join(valor.split()).title()
+                    break
+
+                novos_valores["nome_completo"] = valor
+
+            # Editar a data de nascimento
+            elif campo == "2. Data de nascimento":
+                while True:
+                    valor = input("\nNova data de nascimento (AAAA-MM-DD): ").strip()
+                    partes_data = valor.split("-")
+
+                    # Verificar o formato AAAA-MM-DD
+                    if (len(partes_data) != 3 or
+                        len(partes_data[0]) != 4 or not partes_data[0].isascii() or not partes_data[0].isdigit() or
+                        len(partes_data[1]) != 2 or not partes_data[1].isascii() or not partes_data[1].isdigit() or
+                        len(partes_data[2]) != 2 or not partes_data[2].isascii() or not partes_data[2].isdigit()):
+
+                        print("Formato de data inválido. Utilize AAAA-MM-DD.")
+                        continue
+
+                    try:
+                        # Converter o texto numa data
+                        data = datetime.datetime.strptime(valor, "%Y-%m-%d").date()
+                        hoje = datetime.date.today()
+
+                        # Calcular a idade do inquilino
+                        idade = hoje.year - data.year
+
+                        if (hoje.month, hoje.day) < (data.month, data.day):
+                            idade -= 1
+
+                        if data > hoje:
+                            print("A data de nascimento não pode ser futura.")
+                            continue
+
+                        elif idade < 18:
+                            print("O inquilino deve ter pelo menos 18 anos.")
+                            continue
+
+                        break
+
+                    except ValueError:
+                        print("Data inválida. Verifique o dia, o mês e o ano.")
+
+                novos_valores["data_nascimento"] = valor
+
+            # Editar o sexo
+            elif campo == "3. Sexo":
+                while True:
+                    valor = input("\nSexo (Masculino (M)/Feminino (F)/Outro (O)): ").strip().upper()
+
+                    if valor not in ["MASCULINO", "FEMININO", "OUTRO",
+                                     "MASCULINO (M)", "FEMININO (F)", "OUTRO (O)",
+                                     "MASCULINO(M)", "FEMININO(F)", "OUTRO(O)",
+                                     "M", "F", "O"]:
+                        print("Sexo inválido. Utilize Masculino (M), Feminino (F) ou Outro (O).")
+                        continue
+
+                    # Uniformizar os valores para M, F ou O
+                    if valor in ["MASCULINO", "MASCULINO (M)", "MASCULINO(M)"]:
+                        valor = "M"
+
+                    elif valor in ["FEMININO", "FEMININO (F)", "FEMININO(F)"]:
+                        valor = "F"
+
+                    elif valor in ["OUTRO", "OUTRO (O)", "OUTRO(O)"]:
+                        valor = "O"
+
+                    break
+
+                novos_valores["sexo"] = valor
+
+            # Editar o contacto telefónico
+            elif campo == "4. Contacto telefónico":
+                while True:
+                    valor = input("\nNovo contacto telefónico (ex.: +351 912345678): ").strip()
+
+                    if valor == "":
+                        print("O contacto telefónico não pode estar vazio.")
+                        continue
+
+                    # Verificar os caracteres permitidos
+                    if (not all(caracter.isascii() and caracter.isdigit() or caracter == " "
+                                for caracter in valor.lstrip("+"))
+                        or valor.count("+") > 1
+                        or ("+" in valor and not valor.startswith("+"))):
+
+                        print("O contacto telefónico contém caracteres inválidos.")
+                        continue
+
+                    try:
+                        # Interpretar e validar o número
+                        numero = phonenumbers.parse(valor, "PT")
+
+                        if not phonenumbers.is_valid_number(numero):
+                            print("Contacto telefónico inválido.")
+                            continue
+
+                        # Guardar no formato internacional E.164
+                        valor = phonenumbers.format_number(
+                            numero, phonenumbers.PhoneNumberFormat.E164
+                        )
+                        break
+
+                    except phonenumbers.NumberParseException:
+                        print("Número inválido. Verifique o indicativo e os algarismos introduzidos.")
+
+                novos_valores["contacto_telefonico"] = valor
+
+            # Editar o email
+            elif campo == "5. Email":
+                while True:
+                    valor = input("\nNovo email: ").strip()
+
+                    if valor == "":
+                        print("O email não pode estar vazio.")
+                        continue
+
+                    if valor.count("@") != 1:
+                        print("Email inválido. Deve conter exatamente um símbolo @.")
+                        continue
+
+                    utilizador, dominio = valor.split("@")
+
+                    if utilizador == "" or dominio == "":
+                        print("Email inválido. Introduza um endereço completo.")
+                        continue
+
+                    # Validar os caracteres do domínio
+                    if not all(caracter.isascii() and (caracter.isalnum() or caracter in ".-") for caracter in dominio):
+                        print("Email inválido. O domínio contém caracteres inválidos.")
+                        continue
+
+                    if any(caracter.isspace() for caracter in valor):
+                        print("O email não pode conter espaços.")
+                        continue
+
+                    if "." not in dominio:
+                        print("Email inválido. O domínio deve conter um ponto.")
+                        continue
+
+                    if ".." in valor:
+                        print("Email inválido. Não pode conter pontos consecutivos.")
+                        continue
+
+                    partes_dominio = dominio.split(".")
+
+                    if any(parte.startswith("-") or parte.endswith("-") for parte in partes_dominio):
+                        print("Email inválido. O domínio não pode começar ou terminar com hífenes.")
+                        continue
+
+                    if (utilizador.startswith(".") or utilizador.endswith(".")
+                        or dominio.startswith(".") or dominio.endswith(".")):
+
+                        print("Email inválido. As partes do endereço não podem começar ou terminar com um ponto.")
+                        continue
+
+                    extensao = dominio.split(".")[-1]
+
+                    if len(extensao) < 2 or not extensao.isascii() or not extensao.isalpha():
+                        print("Email inválido. A extensão do domínio deve conter pelo menos duas letras.")
+                        continue
+
+                    break
+
+                novos_valores["email"] = valor
+
+            # Editar o ordenado mensal
+            elif campo == "6. Ordenado mensal":
+                while True:
+                    valor = input("\nNovo ordenado mensal (€): ").strip()
+
+                    try:
+                        # Permitir a introdução de valores com vírgula ou ponto
+                        ordenado = float(valor.replace(",", "."))
+
+                        # Impedir valores negativos ou não finitos
+                        if ordenado < 0 or not math.isfinite(ordenado):
+                            print("O ordenado mensal deve ser um valor não negativo e finito.")
+                            continue
+
+                        break
+
+                    except ValueError:
+                        print("Ordenado inválido. Introduza um valor numérico válido.")
+
+                novos_valores["ordenado_mensal"] = ordenado
+
+        # Apresentar um resumo dos dados que vão ser alterados
+        print("\n--- CONFIRMAR ALTERAÇÕES ---")
+        print(f"NIF do inquilino: {nif}")
+
+        for coluna, valor in novos_valores.items():
+            if coluna == "ordenado_mensal":
+                print(f"{coluna}: {valor:.2f} €")
+            else:
+                print(f"{coluna}: {valor}")
+
+        # Pedir confirmação antes de atualizar a base de dados
+        confirmacao = [inquirer.List("confirmar",
+                message="Confirma que pretende guardar todas estas alterações?",
+                choices=["Sim", "Não"],
+                default="Não")
+        ]
+
+        resposta = inquirer.prompt(confirmacao)
+
+        # Cancelar sem guardar qualquer alteração
+        if resposta is None or resposta["confirmar"] == "Não":
+            print("\nEdição cancelada. Nenhum dado foi alterado.")
+            return
+
+        # Preparar os campos a atualizar na instrução SQL
+        atualizacoes = []
+
+        for coluna in novos_valores:
+            atualizacoes.append(f"{coluna} = ?")
+
+        # Juntar os campos separados por vírgulas
+        campos_sql = ", ".join(atualizacoes)
+
+        # Obter os novos valores pela mesma ordem dos campos
+        valores_sql = list(novos_valores.values())
+
+        # Acrescentar o NIF para identificar o inquilino
+        valores_sql.append(int(nif))
+
+        # Atualizar todos os campos selecionados numa única instrução SQL
+        cursor.execute(
+            f"UPDATE inquilinos SET {campos_sql} WHERE nif = ?",
+            valores_sql
+        )
+
+        # Guardar todas as alterações na base de dados
+        conexao.commit()
+
+        print("\nDados do inquilino atualizados com sucesso!")
+
+    except sqlite3.Error as e:
+        # Tratar erros relacionados com a base de dados
+        print(f"\nErro ao editar inquilino: {e}")
+
+        if conexao is not None:
+            conexao.rollback()
+
+    finally:
+        # Fechar a ligação à base de dados
+        if conexao is not None:
+            conexao.close()
+
+
+def eliminar_inquilinos():
+    print("\n--- ELIMINAR INQUILINO ---")
+
+    # Pedir e validar o NIF do inquilino que se pretende eliminar
+    while True:
+        nif = input("NIF do inquilino (introduza apenas 0 para cancelar): ").strip()
+
+        if nif == "0":
+            print("\nEliminação cancelada.")
+            return
+
+        # Verificar se o NIF contém exatamente 9 dígitos
+        if len(nif) != 9 or not nif.isascii() or not nif.isdigit():
+            print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
+            continue
+
+        break
+
+    # Inicializar a variável de ligação à base de dados
+    conexao = None
+
+    try:
+        # Estabelecer ligação à base de dados
+        conexao = sqlite3.connect(base_de_dados)
+
+        # Ativar a verificação das chaves estrangeiras
+        conexao.execute("PRAGMA foreign_keys = ON")
+
+        cursor = conexao.cursor()
+
+        # Verificar se o inquilino existe na base de dados
+        cursor.execute(
+            "SELECT nome_completo FROM inquilinos WHERE nif = ?",
+            (int(nif),)
+        )
+
+        inquilino = cursor.fetchone()
+
+        if inquilino is None:
+            print("\nNão existe nenhum inquilino registado com esse NIF.")
+            return
+
+        print(f"\nInquilino encontrado: {inquilino[0]}")
+        print(f"NIF: {nif}")
+
+        # Verificar se o inquilino tem imóveis associados
+        cursor.execute(
+            "SELECT COUNT(*) FROM imoveis WHERE nif_inquilino = ?",
+            (int(nif),)
+        )
+
+        numero_imoveis = cursor.fetchone()[0]
+
+        # Impedir a eliminação se existirem imóveis associados
+        if numero_imoveis > 0:
+            print("\nNão é possível eliminar este inquilino.")
+
+            if numero_imoveis == 1:
+                print("Existe 1 imóvel associado a este inquilino.")
+            else:
+                print(f"Existem {numero_imoveis} imóveis associados a este inquilino.")
+
+            print("É necessário encerrar primeiro os arrendamentos associados.")
+            return
+
+        # Pedir confirmação antes de eliminar o inquilino
+        confirmacao = [inquirer.List("confirmar",
+                message="Confirma que pretende eliminar este inquilino?",
+                choices=["Sim", "Não"],
+                default="Não")
+        ]
+
+        resposta = inquirer.prompt(confirmacao)
+
+        # Cancelar a operação se o utilizador selecionar Não ou interromper o menu
+        if resposta is None or resposta["confirmar"] == "Não":
+            print("\nEliminação cancelada. Nenhum dado foi eliminado.")
+            return
+
+        # Eliminar o inquilino identificado pelo NIF
+        cursor.execute("DELETE FROM inquilinos WHERE nif = ?", (int(nif),))
+
+        # Guardar a alteração na base de dados
+        conexao.commit()
+
+        print("\nInquilino eliminado com sucesso!")
+
+    except sqlite3.IntegrityError:
+        # Impedir a eliminação caso existam relações protegidas
+        print("\nNão foi possível eliminar o inquilino.")
+        print("Existem registos associados que impedem a eliminação.")
+
+        if conexao is not None:
+            conexao.rollback()
+
+    except sqlite3.Error as e:
+        # Tratar outros erros relacionados com a base de dados
+        print(f"\nErro ao eliminar inquilino: {e}")
+
+        if conexao is not None:
+            conexao.rollback()
+
+    finally:
+        # Fechar a ligação à base de dados
+        if conexao is not None:
+            conexao.close()

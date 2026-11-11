@@ -1,18 +1,17 @@
-## questionary ou inquirer
+## inquirer
 #### Adicionar uma contagem para que sempre que um imovel seja adicionado, o proprietario ganhe +1 no numero de imoveis que este tenha
 #### validar todos os inputs pedidos pelo código
 ### Colocar o os.system() para limpar o terminal
 ## Editar informações: Permitir editar os dados das tabelas para as 3 entidades
 ## Adicionar erros LOG
 
-# Para phonenumbers e questionary, deve-se preparar um ficheiro requirements.txt para facilitar a instalação dessas dependências nos computadores externos
+# Para phonenumbers e inquirer, deve-se preparar um ficheiro requirements.txt para facilitar a instalação dessas dependências nos computadores externos
 
 import os
 from operacoes.imoveis import *
 from operacoes.proprietario_inquilinos import *
 import inquirer   
 import sys
-from pprint import pprint
 sys.path.append(os.path.realpath(".")) # adiciona o directorio de trabalho ao módulo de procura do python, permitindo importar modulos locais e scripts sem ter de instalar
 
 # Obter o caminho completo da pasta onde o programa está guardado
@@ -34,7 +33,10 @@ def menu_principal():
     # Menu principal da aplicação - o utilizador fica no menu principal até escolher a opção de sair da aplicação.
     # Permite escolher entre a gestão de imóveis, inquilinos e proprietários, ou sair da aplicação.
     
-    os.system('cls')
+    if os.name == "nt":   # Limpar o terminal de forma compativel a diferentes sistemas operativos
+        os.system("cls")
+    else:
+        os.system("clear")
     
     while True:
         print("\n" + "=" * 40)
@@ -52,8 +54,11 @@ def menu_principal():
                             choices=["1. Gestão de Imóveis", "2. Gestão de Inquilinos","3. Gestão de Proprietários","0. Sair"]
             ),
         ]
+
+
         answers = inquirer.prompt(menu)
         opcao = answers['opcao'][0]  # Extrair o primeiro caractere da string selecionada, que corresponde à opção escolhida (1, 2, 3 ou 0)
+        
         if opcao == "1":
             menu_imoveis()
  
@@ -64,7 +69,9 @@ def menu_principal():
             menu_proprietarios()
 
         elif opcao == "0":
-            print("\n A sair da aplicação CasaFácil, LDA. Obrigado(a) por utilizar o nosso software!")
+            print(" A sair da aplicação CasaFácil, LDA. Obrigado(a) por utilizar o nosso software!")
+            print("""\n        Coded by Beatryz Souza, Filipa Nogueira and Vívian Santos.""")
+            print("\n")
             break
 
         elif opcao == "":
@@ -77,11 +84,14 @@ def menu_principal():
 
 
 def menu_imoveis():
-    os.system('cls')  # limpar o terminal
+
+    if os.name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")
+    
     while True:
-        print("\n" + "=" * 40)
         print("       --- GESTÃO DE IMÓVEIS ---")
-        print("=" * 40)
 
         menu=[inquirer.List('opcao',
             message="Escolha o que quer fazer",
@@ -123,7 +133,13 @@ def menu_imoveis():
  
 
 def menu_inquilinos():
-    os.system('cls')  # limpar o terminar
+
+    if os.name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")
+
+
     while True:
 
         menu=[inquirer.List('opcao',
@@ -149,30 +165,85 @@ def menu_inquilinos():
 
 
 def menu_proprietarios():
-    os.system('cls')  # limpar o terminar
+
+    if os.name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")
+
+
     while True:
-        
+
         print("\n--- GESTÃO DE PROPRIETÁRIOS ---")
 
-        menu=[inquirer.List('opcao',
-                    message="\n--- GESTÃO DE PROPRIETÁRIOS ---",
-                    choices=["1. Registar proprietário", "2. Consultar todos os proprietários","0. Voltar ao menu principal"]
-                ),
-            ]
+        menu = [inquirer.List("opcao",
+                message="Escolha o que quer fazer",
+                choices=["1. Registar proprietário", "2. Consultar todos os proprietários", "3. Editar dados de um proprietário", "4. Eliminar proprietário", "0. Voltar ao menu principal"]
+            )
+        ]
+
         answers = inquirer.prompt(menu)
-        opcao = answers['opcao'][0]  # Extrair o primeiro caractere da string selecionada, que corresponde à opção escolhida (1, 2, 3 ou 0)
- 
+
+        if answers is None: # Terminar o menu se o utilizador cancelar
+            break
+
+        opcao = answers["opcao"][0] # Extrair o primeiro caractere da opção selecionada
+
         if opcao == "1":
             adicionar_proprietario()
 
         elif opcao == "2":
             consultar_proprietarios()
 
+        elif opcao == "3":
+            editar_proprietarios()
+
+        elif opcao == "4":
+            eliminar_proprietarios()
+
         elif opcao == "0":
             break
 
-        else:
-            print("Opção inválida!")
+
+def menu_inquilinos():
+
+    if os.name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")
+
+
+    while True:
+
+        print("\n--- GESTÃO DE INQUILINOS ---")
+
+        menu = [inquirer.List("opcao",
+                message="Escolha o que quer fazer",
+                choices=["1. Registar inquilino", "2. Consultar todos os inquilinos", "3. Editar dados de um inquilino", "4. Eliminar inquilino", "0. Voltar ao menu principal"]
+            )
+        ]
+
+        answers = inquirer.prompt(menu)
+
+        if answers is None: # Terminar o menu se o utilizador cancelar
+            break
+
+        opcao = answers["opcao"][0] # Extrair o primeiro caractere da opção selecionada
+
+        if opcao == "1":
+            adicionar_inquilino()
+
+        elif opcao == "2":
+            consultar_inquilinos()
+
+        elif opcao == "3":
+            editar_inquilinos()
+
+        elif opcao == "4":
+            eliminar_inquilinos()
+
+        elif opcao == "0":
+            break
 
 menu_principal() # de forma a que o menu principal seja chamado quando o programa é executado, iniciando a aplicação.
 
