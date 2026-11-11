@@ -42,6 +42,11 @@ def menu_principal():
         print("\n" + "=" * 40)
         print("   CASAFÁCIL LDA. - GESTÃO DE IMÓVEIS")
         print("=" * 40)
+        print("") 
+        print("Use as setas ⬆ ⬇︎ para navegar no Menu.") 
+        print("")
+       
+
         #print("1. Gestão de Imóveis")
         #print("2. Gestão de Inquilinos")
         #print("3. Gestão de Proprietários")
@@ -55,10 +60,11 @@ def menu_principal():
             ),
         ]
 
-
         answers = inquirer.prompt(menu)
         opcao = answers['opcao'][0]  # Extrair o primeiro caractere da string selecionada, que corresponde à opção escolhida (1, 2, 3 ou 0)
-        
+
+
+
         if opcao == "1":
             menu_imoveis()
  
