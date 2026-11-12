@@ -152,3 +152,171 @@ Timestamp: 2026-11-12 19:01:17.714869
 
 Mensagem: Duracao do contrato invalida
 
+
+ID: 102
+Titulo: Nome Invalido
+Timestamp: 2026-11-12 19:52:09.276324
+
+Mensagem: O nome so pode conter letras, espacos, apostrofos e hifens
+
+
+ID: 103
+Titulo: Nome Invalido
+Timestamp: 2026-11-12 19:52:43.319828
+
+Mensagem: O nome deve conter pelo menos duas palavras
+
+
+ID: 103
+Titulo: Nome Invalido
+Timestamp: 2026-11-12 19:52:58.487997
+
+Mensagem: O nome deve conter pelo menos duas palavras
+
+
+ID: 501
+Titulo: NIF invalido
+Timestamp: 2026-11-12 19:53:40.511414
+
+Mensagem: Numero de caracteres diferente de 9
+
+
+ID: 401
+Titulo: Data Invalida
+Timestamp: 2026-11-12 19:55:00.351342
+
+Mensagem: Nao se aceita uma data futura como data de nascimento
+
+
+ID: 402
+Titulo: Data Invalida
+Timestamp: 2026-11-12 19:55:39.055757
+
+Mensagem: Idade inferior a 18 anos
+
+
+ID: 209
+Titulo: Email invalido
+Timestamp: 2026-11-12 19:57:24.031536
+
+Mensagem: As partes do endereço estao a começar ou terminar com um ponto
+
+
+ID: 202
+Titulo: Email invalido
+Timestamp: 2026-11-12 19:57:35.639778
+
+Mensagem: Deve conter exatamente um simbolo @.
+
+
+ID: 210
+Titulo: Email invalido
+Timestamp: 2026-11-12 19:57:48.727623
+
+Mensagem: Extensao do dominio do email incorreta
+
+
+ID: 803
+Titulo: Operação anulada
+Timestamp: 2026-11-12 20:01:17.462303
+
+Mensagem: Operacoes de eliminacao de proprietarios com imoveis existentes sao impossiveis
+
+
+ID: 502
+Titulo: NIF invalido
+Timestamp: 2026-11-12 20:04:44.287608
+
+Mensagem: Digito de controlo incorreto
+
+
+ID: 501
+Titulo: NIF invalido
+Timestamp: 2026-11-12 20:05:22.991324
+
+Mensagem: Numero de caracteres diferente de 9
+
+
+ID: 303
+Titulo: Numero invalido
+Timestamp: 2026-11-12 20:06:18.079259
+
+Mensagem: O contacto nao existe
+
+
+ID: 703
+Titulo: Operacao invalida
+Timestamp: 2026-11-12 20:09:01.319788
+
+Mensagem: Falta de correspondencia de pessoa com o NIF
+
+
+ID: 809
+Titulo: Operação anulada
+Timestamp: 2026-11-12 20:09:17.111704
+
+Mensagem: Nenhum campo selecionado para alteracao
+
+
+ID: 601
+Titulo: Ordenado invalido
+Timestamp: 2026-11-12 20:11:50.615214
+
+Mensagem: Valor inserido negativo ou não finito
+
+
+ID: 602
+Titulo: Ordenado invalido
+Timestamp: 2026-11-12 20:11:57.175178
+
+Mensagem: O valor introduzido contem letras
+
+
+ID: 602
+Titulo: Ordenado invalido
+Timestamp: 2026-11-12 20:12:06.623517
+
+Mensagem: O valor introduzido contem letras
+
+
+ID: 902
+Titulo: NIF Inexistente
+Timestamp: 2026-11-12 20:18:59.639111
+
+Mensagem: Sem registo de proprietario
+
+
+ID: 905
+Titulo: Campo invalido
+Timestamp: 2026-11-12 20:20:01.982901
+
+Mensagem: Nao pode colocar o numero da porta no campo da rua
+
+
+ID: 910
+Titulo: Campo invalido
+Timestamp: 2026-11-12 20:20:23.815207
+
+Mensagem: Informação duplicada
+
+
+ID: 915
+Titulo: Campo invalido
+Timestamp: 2026-11-12 20:21:12.287005
+
+Mensagem: Formato de Código Postal
+
+
+ID: 915
+Titulo: Campo invalido
+Timestamp: 2026-11-12 20:21:24.158851
+
+Mensagem: Formato de Código Postal
+
+
+ID: 1001
+Titulo: Erro de Validacao
+Timestamp: 2026-11-12 20:21:43.274116
+
+Mensagem: Dados de cidade e codigo postal nao correspondentes
+

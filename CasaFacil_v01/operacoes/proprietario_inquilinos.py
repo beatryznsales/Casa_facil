@@ -138,6 +138,7 @@ def validar_sexo(edicao=False):
 def validar_contacto_telefonico(edicao=False):
     # Pedir e validar o contacto telefónico
     # Permite números de telefone fixos e móveis, portugueses e estrangeiros
+
     while True:
         if edicao:
             contacto_telefonico = pedir_input("\nNovo contacto telefónico (ex.: +351 912345678): ").strip()
@@ -297,9 +298,14 @@ def validar_ordenado(edicao=False):
                 ordenado = float(pedir_input("Ordenado mensal (€): ").strip().replace(",", "."))
 
             # Verificar se o ordenado é finito: se for negativo, infinito ou NaN (Not a Number) é bloqueado
-            if ordenado < 0 or not math.isfinite(ordenado):  # Pode ser zero no registo, mas não permite arrendar um imóvel
-                print("O ordenado mensal deve ser um valor não negativo e finito.")
+            if ordenado < 0  or not math.isfinite(ordenado):  # Pode ser zero no registo, mas não permite arrendar um imóvel
+                print("O ordenado mensal deve ser um valor não negativo, finito.")
                 Logs_erros.logs_erro(601,'Ordenado invalido', 'Valor inserido negativo ou não finito', pathlogs)
+                continue
+
+            elif ordenado > 100000000:
+                print("Ordenado mensal não pode ultrapassar os 100 000 000 €.")
+                Logs_erros.logs_erro(603,'Ordenado invalido', 'Valor inserido demasiado grande', pathlogs)
                 continue
 
             return ordenado
