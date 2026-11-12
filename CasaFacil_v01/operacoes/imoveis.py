@@ -2,8 +2,13 @@ import os
 import sqlite3
 import math
 import inquirer
+<<<<<<< Updated upstream
 import requests
 import unicodedata
+=======
+import Logs_erros
+pathlogs = 'logs_erros.txt'
+>>>>>>> Stashed changes
 
 pasta_programa = os.path.dirname(os.path.abspath(__file__))
 
@@ -21,6 +26,7 @@ def adicionar_imovel():
         # Verificar se o NIF contém exatamente 9 dígitos de 0 a 9
         if (len(nif_proprietario) != 9 or not nif_proprietario.isascii() or not nif_proprietario.isdigit()):
             print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
+            Logs_erros.logs_erro(901,'NIF invalido', 'Numero de caracteres diferente de 9', pathlogs)
             continue
         else:
             break  
@@ -35,6 +41,7 @@ def adicionar_imovel():
 
         if cursor.fetchone() is None:
             print(f"\nNão existe nenhum proprietário registado com o NIF {nif_proprietario}.")
+            Logs_erros.logs_erro(902,'NIF Inexistente', 'Sem registo de proprietario', pathlogs)
             print("Antes de adicionar um imóvel, registe primeiro o seu proprietário no Menu: 3. Gestão de Proprietários.")
             return
 
@@ -42,6 +49,7 @@ def adicionar_imovel():
 
     except sqlite3.Error as e:
         print(f"\nErro ao verificar o proprietário: {e}")
+        Logs_erros.logs_erro(902,'Verificacao invalida', 'Erro a verificar proprietario', pathlogs)
         return
 
     finally:
@@ -57,10 +65,12 @@ def adicionar_imovel():
 
         if rua == "":
             print("O nome da rua não pode estar vazio.")
+            Logs_erros.logs_erro(903,'Campo invalido', 'Campo Rua nao preenchido', pathlogs)
             continue
 
         if len(rua) > 150:
             print("O nome da rua não pode ultrapassar 150 caracteres.")
+            Logs_erros.logs_erro(904,'Campo invalido', 'Campo Rua nao pode conter mais de 150 caracteres', pathlogs)
             continue
 
         # Separar as palavras do nome da rua
@@ -69,21 +79,25 @@ def adicionar_imovel():
         # Verificar expressões associadas ao número da porta e bloquea-las
         if "," in rua or any(expressao in palavras_rua for expressao in ["nº", "n.º","n.", "número", "numero"]): 
             print("Não deve inserir o número da porta no campo da rua.")
+            Logs_erros.logs_erro(905,'Campo invalido', 'Nao pode colocar o numero da porta no campo da rua', pathlogs)
             continue
 
         # Verificar e bloquear expressões como n123, n123A, nº123 ou n.º123 no inicio da frase
         if any(palavra.startswith(("nº", "n.º")) or (palavra.startswith("n") and (palavra[1:].isdigit() or (len(palavra) > 2 and palavra[1:-1].isdigit() and palavra[-1].isalpha()))) for palavra in palavras_rua):
             print("Não deve inserir o número da porta no campo da rua.")
+            Logs_erros.logs_erro(905,'Campo invalido', 'Nao pode colocar o numero da porta no campo da rua', pathlogs)
             continue
 
         # Verificar se foi introduzido um código postal
         if any(len(palavra) == 8 and palavra[4] == "-" and palavra[:4].isdigit() and palavra[5:].isdigit() for palavra in palavras_rua):
             print("Não deve inserir o código postal no campo da rua.")
+            Logs_erros.logs_erro(906,'Campo invalido', 'Nao pode colocar o codigo postal no campo da rua', pathlogs)
             continue
 
         # Verificar se existem caracteres inválidos, incluindo vírgulas
         if not all(caracter.isalnum() or caracter in " .'-ºª" for caracter in rua):
             print("O nome da rua contém caracteres inválidos.")
+            Logs_erros.logs_erro(907,'Campo invalido', 'foram inseridos caracteres invalidos no campo rua', pathlogs)
             continue
 
         # Verificar se a rua contém letras
@@ -97,9 +111,11 @@ def adicionar_imovel():
 
             if num_porta == "":
                 print("O número da porta não pode estar vazio.")
+                Logs_erros.logs_erro(908,'Campo invalido', 'Campo: número da porta - vazio', pathlogs)
 
             elif len(num_porta) > 5:
                 print("O número da porta não pode ultrapassar 5 caracteres.")
+                Logs_erros.logs_erro(909,'Campo invalido', 'Campo: número da porta - excesso de caracteres', pathlogs)
 
             elif (num_porta.isascii() and num_porta.isdigit() and int(num_porta) > 0):
                 break
@@ -109,6 +125,7 @@ def adicionar_imovel():
 
             else:
                 print("Número da porta inválido. Exemplos de números de porta: 25 ou 25A")
+                Logs_erros.logs_erro(909,'Campo invalido', 'Campo: número da porta - fora das regras estabelecidas', pathlogs)
 
         # Identificar números presentes no nome da rua
         numeros_rua = []
@@ -144,6 +161,7 @@ def adicionar_imovel():
         # Pedir confirmação quando existe uma possível repetição
         if numero_repetido:
             print("\nAtenção: O número da porta também aparece no nome da rua.")
+            Logs_erros.logs_erro(910,'Campo invalido', 'Informação duplicada', pathlogs)
             print("\n")
 
             while True:
@@ -158,6 +176,7 @@ def adicionar_imovel():
 
                 else:
                     print("Resposta inválida. Introduza Sim ou Não.")
+                    Logs_erros.logs_erro(911,'Resposta Invalida', 'So sao aceites respostas de sim ou nao', pathlogs)
 
             if resposta in ["não", "nao", "n"]:
                 continue
@@ -173,13 +192,16 @@ def adicionar_imovel():
 
         elif len(num_apartamento) > 15:
             print("A identificação do andar/fração não pode ultrapassar 15 caracteres.")
+            Logs_erros.logs_erro(912,'Campo invalido', 'Excedeu o numero de caracteres', pathlogs)
 
         elif not all(caracter.isalnum() or caracter in " .ºª/-" for caracter in num_apartamento):
             print("A identificação do andar/fração contém caracteres inválidos.")
+            Logs_erros.logs_erro(913,'Campo invalido', 'Caracteres invalidos', pathlogs)
 
         elif not any(caracter.isalnum() for caracter in num_apartamento):
             print("A identificação do andar/fração deve conter letras ou números.")
-
+            Logs_erros.logs_erro(913,'Campo invalido', 'Confirme restricoes do campo numero de apartamento', pathlogs)
+            
         else:
             break
 
