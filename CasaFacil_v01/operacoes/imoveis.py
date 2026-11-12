@@ -894,7 +894,10 @@ def atribuir_imovel_inquilino():
 def _atribuir_imovel_inquilino():
     print("\nEscreva 'voltar' em qualquer campo para cancelar a operação.")
     #Retorna o imóvel disponível escolhido pelo o utilizador
-    imovel_selecionado = selecionar_imovel("situacao = 'Disponível'")
+    imovel_selecionado = selecionar_imovel("situacao IN ('Disponível', 'Disponível')")
+    if imovel_selecionado is None:
+        print("\nNão foi selecionado nenhum imóvel disponível.")
+        return
     imovel_renda = imovel_selecionado[5] #Pega a sexta coluna da consulta anterior
     imovel_id = imovel_selecionado[0] #Pega a primeira coluna que é o id do imovel
 
@@ -964,18 +967,118 @@ def buscar_inquilino(nif):
 def encerrar_contrato_arrendamento():
     #Retorna o imóvel arrendado escolhido pelo o utilizador
     imovel_selecionado = selecionar_imovel("situacao = 'Arrendada'")
+    if imovel_selecionado is None:
+        print("\nNão foi selecionado nenhum imóvel arrendado.")
+        return
     imovel_id = imovel_selecionado[0]
 
     conexao = sqlite3.connect(base_de_dados)
     cursor = conexao.cursor()
     try:
         #Atualizar a base de dados
-        cursor.execute(f"UPDATE imoveis SET nif_inquilino = NULL, situacao = 'Disponível' WHERE id = {imovel_id}")
+        cursor.execute(
+            "UPDATE imoveis SET nif_inquilino = NULL, situacao = 'Disponível' WHERE id = ?",
+            (imovel_id,)
+        )
 
         #Confirmar atribuição
         conexao.commit()
         print("Contrato encerrado!")
     finally:
         #Fechar a conexão
+        if conexao is not None:
+            conexao.close()
+
+#####################################     ELIMINAR IMÓVEL     ############################################################################################################################
+
+def eliminar_imovel():
+    # Escolher o imóvel e permitir regressar ao menu sem apagar dados.
+    print("\n--- ELIMINAR IMÓVEL ---")
+    imovel_selecionado = selecionar_imovel(permitir_voltar=True)
+
+    if imovel_selecionado is None:
+        return
+
+    id_imovel = imovel_selecionado[0]
+    conexao = None
+
+    try:
+        conexao = sqlite3.connect(base_de_dados)
+        conexao.execute("PRAGMA foreign_keys = ON")
+        cursor = conexao.cursor()
+
+        # Bloquear outros registos durante a confirmação e a eliminação.
+        conexao.execute("BEGIN IMMEDIATE")
+
+        # Confirmar a situação atual do imóvel diretamente na base de dados.
+        cursor.execute("""
+            SELECT id_morada, nif_proprietario, nif_inquilino, situacao
+            FROM imoveis
+            WHERE id = ?
+        """, (id_imovel,))
+        imovel = cursor.fetchone()
+
+        if imovel is None:
+            print("\nO imóvel selecionado já não existe na base de dados.")
+            return
+
+        id_morada, nif_proprietario, nif_inquilino, situacao = imovel
+        situacao = unicodedata.normalize("NFC", situacao or "")
+
+        # Impedir a eliminação de imóveis arrendados ou com inquilino associado.
+        if situacao != "Disponível" or nif_inquilino is not None:
+            print("\nNão é possível eliminar este imóvel.")
+            print("O imóvel tem um contrato de arrendamento ativo ou um inquilino associado.")
+            print("Encerre primeiro o contrato de arrendamento, se aplicável.")
+            return
+
+        # Pedir confirmação antes de apagar o imóvel e a respetiva morada.
+        confirmacao = [inquirer.List(
+            "confirmar",
+            message=f"Tem a certeza de que pretende eliminar o imóvel com ID {id_imovel}?",
+            choices=["Não, cancelar", "Sim, eliminar definitivamente"]
+        )]
+        resposta = inquirer.prompt(confirmacao)
+
+        if resposta is None or resposta["confirmar"] != "Sim, eliminar definitivamente":
+            informar_cancelamento()
+            return
+
+        # Eliminar o imóvel apenas se continuar disponível e sem inquilino.
+        cursor.execute("DELETE FROM imoveis WHERE id = ?", (id_imovel,))
+
+        if cursor.rowcount != 1:
+            print("\nNão foi possível eliminar o imóvel.")
+            return
+
+        # Eliminar a morada, mas só se não estiver associada a outro imóvel.
+        cursor.execute("SELECT COUNT(*) FROM imoveis WHERE id_morada = ?", (id_morada,))
+        if cursor.fetchone()[0] == 0:
+            cursor.execute("DELETE FROM moradas WHERE id = ?", (id_morada,))
+
+        # Atualizar a contagem de habitações do proprietário sem permitir valores negativos.
+        cursor.execute("""
+            UPDATE proprietarios
+            SET N_habitacoes_registadas = CASE
+                WHEN COALESCE(N_habitacoes_registadas, 0) > 0
+                THEN N_habitacoes_registadas - 1
+                ELSE 0
+            END
+            WHERE nif = ?
+        """, (nif_proprietario,))
+
+        # Guardar as três operações em conjunto.
+        conexao.commit()
+        print("\nImóvel eliminado com sucesso!")
+        print("A morada associada foi removida, caso não fosse utilizada por outro imóvel.")
+        print("O número de habitações do proprietário foi atualizado.")
+
+    except sqlite3.Error as e:
+        if conexao is not None:
+            conexao.rollback()
+        print(f"\nErro ao eliminar o imóvel: {e}")
+        Logs_erros.logs_erro(1017, 'Erro de Eliminacao', 'Erro ao eliminar imovel', pathlogs)
+
+    finally:
         if conexao is not None:
             conexao.close()
