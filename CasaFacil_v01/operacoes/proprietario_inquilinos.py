@@ -473,7 +473,7 @@ def editar_proprietarios():
         print(f"NIF: {nif}")
 
         # Apresentar os campos que podem ser alterados
-        menu = [inquirer.Checkbox("campos",
+        menu = [inquirer.List("campos",
                 message="Selecione os campos que pretende alterar",
                 choices=["1. Nome completo", "2. Data de nascimento", "3. Sexo", "4. Contacto telefónico", "5. Email"])]
 
@@ -817,7 +817,7 @@ def editar_inquilinos():
         print(f"NIF: {nif}")
 
         # Apresentar os campos que podem ser alterados
-        menu = [inquirer.Checkbox("campos",
+        menu = [inquirer.List("campos",
                 message="Selecione os campos que pretende alterar",
                 choices=["1. Nome completo", "2. Data de nascimento", "3. Sexo", "4. Contacto telefónico", "5. Email", "6. Ordenado mensal"])
         ]

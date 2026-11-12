@@ -19,3 +19,101 @@ Timestamp_1: 2026-11-12 12:15:02.388006
 
 Mensagem: Digito de controlo incorreto
 
+
+ID: 905
+Titulo: Campo invalido
+Timestamp: 2026-11-12 18:15:44.785356
+
+Mensagem: Nao pode colocar o numero da porta no campo da rua
+
+
+ID: 910
+Titulo: Campo invalido
+Timestamp: 2026-11-12 18:18:03.103362
+
+Mensagem: Informação duplicada
+
+
+ID: 910
+Titulo: Campo invalido
+Timestamp: 2026-11-12 18:19:01.791080
+
+Mensagem: Informação duplicada
+
+
+ID: 1002
+Titulo: Erro de Validacao
+Timestamp: 2026-11-12 18:19:49.957786
+
+Mensagem: Ccdigo postal inexistente
+
+
+ID: 1001
+Titulo: Erro de Validacao
+Timestamp: 2026-11-12 18:21:02.064401
+
+Mensagem: Dados de cidade e codigo postal nao correspondentes
+
+
+ID: 1005
+Titulo: Erro de Validacao
+Timestamp: 2026-11-12 18:21:54.274793
+
+Mensagem: Tipo Imovel nao correspondente as opcoes
+
+
+ID: 1008
+Titulo: Erro de Validacao
+Timestamp: 2026-11-12 18:22:54.136905
+
+Mensagem: Erro ao adicionar imovel
+
+
+ID: 901
+Titulo: NIF invalido
+Timestamp: 2026-11-12 18:23:42.976899
+
+Mensagem: Numero de caracteres diferente de 9
+
+
+ID: 910
+Titulo: Campo invalido
+Timestamp: 2026-11-12 18:24:25.657236
+
+Mensagem: Informação duplicada
+
+
+ID: 1008
+Titulo: Erro de Validacao
+Timestamp: 2026-11-12 18:26:13.763192
+
+Mensagem: Erro ao adicionar imovel
+
+
+ID: 809
+Titulo: Operação anulada
+Timestamp: 2026-11-12 18:33:40.983493
+
+Mensagem: Nenhum campo selecionado para alteracao
+
+
+ID: 809
+Titulo: Operação anulada
+Timestamp: 2026-11-12 18:34:20.127374
+
+Mensagem: Nenhum campo selecionado para alteracao
+
+
+ID: 809
+Titulo: Operação anulada
+Timestamp: 2026-11-12 18:35:25.541768
+
+Mensagem: Nenhum campo selecionado para alteracao
+
+
+ID: 809
+Titulo: Operação anulada
+Timestamp: 2026-11-12 18:36:46.933316
+
+Mensagem: Nenhum campo selecionado para alteracao
+
