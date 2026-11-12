@@ -472,56 +472,57 @@ def editar_proprietarios():
         print(f"\nProprietário encontrado: {nome}")
         print(f"NIF: {nif}")
 
-        # Apresentar os campos que podem ser alterados
-        menu = [inquirer.List("campos",
-                message="Selecione os campos que pretende alterar",
-                choices=["1. Nome completo", "2. Data de nascimento", "3. Sexo", "4. Contacto telefónico", "5. Email"])]
+        # Guardar os novos valores num dicionário. Ainda não são escritos na base de dados.
+        novos_valores = {}
 
-        answers = inquirer.prompt(menu)
+        # O inquirer.List devolve apenas uma opção de cada vez.
+        # Repetir o menu permite selecionar vários campos antes de confirmar a edição.
+        while True:
+            menu = [inquirer.List("campos",
+                    message="Selecione um campo para alterar ou termine a seleção",
+                    choices=["1. Nome completo", "2. Data de nascimento", "3. Sexo", "4. Contacto telefónico", "5. Email", "0. Terminar seleção"])
+            ]
 
-        # Cancelar a edição se o utilizador interromper o menu
-        if answers is None:
-            print("\nEdição cancelada.")
-            return
+            answers = inquirer.prompt(menu)
 
-        campos_selecionados = answers["campos"]
+            # Cancelar a edição se o utilizador interromper o menu
+            if answers is None:
+                print("\nEdição cancelada. Nenhum dado foi alterado.")
+                return
 
-        # Verificar se foi selecionado pelo menos um campo
-        if len(campos_selecionados) == 0:
-            print("\nNão selecionou nenhum campo para alterar.")
-            return
+            campo = answers["campos"]  # O List devolve uma string, não uma lista.
 
-        novos_valores = {} # Guardar os novos valores num dicionário
+            if campo == "0. Terminar seleção":
+                break
 
-        # Percorrer os campos selecionados e pedir os novos valores
-        for campo in campos_selecionados:
-
-            # Editar o nome completo
             if campo == "1. Nome completo":
                 novos_valores["nome_completo"] = validar_nome(edicao=True)
 
-            # Editar a data nascimento
             elif campo == "2. Data de nascimento":
                 novos_valores["data_nascimento"] = validar_data_nascimento("proprietário", edicao=True)
 
-            # Editar o sexo
             elif campo == "3. Sexo":
                 novos_valores["sexo"] = validar_sexo(edicao=True)
 
-            # Editar o contacto telefonico
             elif campo == "4. Contacto telefónico":
                 novos_valores["contacto_telefonico"] = validar_contacto_telefonico(edicao=True)
 
-            # Editar o email
             elif campo == "5. Email":
                 novos_valores["email"] = validar_email(edicao=True)
 
+        # Não tentar fazer UPDATE se nenhum campo tiver sido alterado.
+        if len(novos_valores) == 0:
+            print("\nNão selecionou nenhum campo para alterar.")
+            return
+
         # Apresentar um resumo dos dados que vão ser alterados
-        print("\n--- CONFIRMAR ALTERAÇÕES ---")
+        print("\n--- CONFIRMAR ALTERAÇÕES ---\n")
         print(f"NIF do proprietário: {nif}")
 
         for coluna, valor in novos_valores.items():
             print(f"{coluna}: {valor}")
+
+        print()  # Adicionar uma linha em branco antes da confirmação.
 
         # Pedir confirmação antes de atualizar a base de dados
         confirmacao = [inquirer.List("confirmar",
@@ -816,58 +817,55 @@ def editar_inquilinos():
         print(f"\nInquilino encontrado: {nome}")
         print(f"NIF: {nif}")
 
-        # Apresentar os campos que podem ser alterados
-        menu = [inquirer.List("campos",
-                message="Selecione os campos que pretende alterar",
-                choices=["1. Nome completo", "2. Data de nascimento", "3. Sexo", "4. Contacto telefónico", "5. Email", "6. Ordenado mensal"])
-        ]
+        # Guardar os novos valores num dicionário. Ainda não são escritos na base de dados.
+        novos_valores = {}
 
-        answers = inquirer.prompt(menu)
+        # O inquirer.List devolve apenas uma opção de cada vez.
+        # Repetir o menu permite selecionar vários campos antes de confirmar a edição.
+        while True:
+            menu = [inquirer.List("campos",
+                    message="Selecione um campo para alterar ou termine a seleção",
+                    choices=["1. Nome completo", "2. Data de nascimento", "3. Sexo", "4. Contacto telefónico", "5. Email", "6. Ordenado mensal", "0. Terminar seleção"])
+            ]
 
-        # Cancelar a edição se o utilizador interromper o menu
-        if answers is None:
-            print("\nEdição cancelada.")
-            return
+            answers = inquirer.prompt(menu)
 
-        campos_selecionados = answers["campos"]
+            # Cancelar a edição se o utilizador interromper o menu
+            if answers is None:
+                print("\nEdição cancelada. Nenhum dado foi alterado.")
+                return
 
-        # Verificar se foi selecionado pelo menos um campo
-        if len(campos_selecionados) == 0:
+            campo = answers["campos"]  # O List devolve uma string, não uma lista.
+
+            if campo == "0. Terminar seleção":
+                break
+
+            if campo == "1. Nome completo":
+                novos_valores["nome_completo"] = validar_nome(edicao=True)
+
+            elif campo == "2. Data de nascimento":
+                novos_valores["data_nascimento"] = validar_data_nascimento("inquilino", edicao=True)
+
+            elif campo == "3. Sexo":
+                novos_valores["sexo"] = validar_sexo(edicao=True)
+
+            elif campo == "4. Contacto telefónico":
+                novos_valores["contacto_telefonico"] = validar_contacto_telefonico(edicao=True)
+
+            elif campo == "5. Email":
+                novos_valores["email"] = validar_email(edicao=True)
+
+            elif campo == "6. Ordenado mensal":
+                novos_valores["ordenado_mensal"] = validar_ordenado(edicao=True)
+
+        # Não tentar fazer UPDATE se nenhum campo tiver sido alterado.
+        if len(novos_valores) == 0:
             print("\nNão selecionou nenhum campo para alterar.")
             Logs_erros.logs_erro(809,'Operação anulada', 'Nenhum campo selecionado para alteracao', pathlogs)
             return
 
-        novos_valores = {}  # Guardar os novos valores num dicionário
-
-        # Percorrer os campos selecionados e pedir os novos valores
-        for campo in campos_selecionados:
-
-            # Editar o nome completo
-            if campo == "1. Nome completo":
-                novos_valores["nome_completo"] = validar_nome(edicao=True)
-
-            # Editar a data nascimento
-            elif campo == "2. Data de nascimento":
-                novos_valores["data_nascimento"] = validar_data_nascimento("inquilino", edicao=True)
-
-            # Editar o sexo
-            elif campo == "3. Sexo":
-                novos_valores["sexo"] = validar_sexo(edicao=True)
-
-            # Editar o contacto telefonico
-            elif campo == "4. Contacto telefónico":
-                novos_valores["contacto_telefonico"] = validar_contacto_telefonico(edicao=True)
-
-            # Editar o email
-            elif campo == "5. Email":
-                novos_valores["email"] = validar_email(edicao=True)
-
-            # Editar o ordenado mensal
-            elif campo == "6. Ordenado mensal":
-                novos_valores["ordenado_mensal"] = validar_ordenado(edicao=True)
-
         # Apresentar um resumo dos dados que vão ser alterados
-        print("\n--- CONFIRMAR ALTERAÇÕES ---")
+        print("\n--- CONFIRMAR ALTERAÇÕES ---\n")
         print(f"NIF do inquilino: {nif}")
 
         for coluna, valor in novos_valores.items():
@@ -875,6 +873,8 @@ def editar_inquilinos():
                 print(f"{coluna}: {valor:.2f} €")
             else:
                 print(f"{coluna}: {valor}")
+
+        print()  # Adicionar uma linha em branco antes da confirmação.
 
         # Pedir confirmação antes de atualizar a base de dados
         confirmacao = [inquirer.List("confirmar",
