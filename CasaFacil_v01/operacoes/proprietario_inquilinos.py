@@ -4,6 +4,8 @@ import os
 import sqlite3
 import math
 import inquirer
+import Logs_erros
+pathlogs = 'logs_erros.txt'
 
 pasta_programa = os.path.dirname(os.path.abspath(__file__))
 
@@ -26,16 +28,19 @@ def validar_nome(edicao=False):
         # Verificar que o nome não pode estar vazio
         if nome == "":
             print("O nome não pode estar vazio.")
+            Logs_erros.logs_erro(101,'Nome Invalido', 'O nome esta vazio', pathlogs)
             continue
 
         # Não podem ter caracteres especiais nem números, apenas letras como acentos, espaços, apóstrofes e hífenes
         if not all(caracter.isalpha() or caracter in "-' " for caracter in nome):
             print("O nome deve conter apenas letras, espaços, apóstrofos e hífenes.")
+            Logs_erros.logs_erro(102,'Nome Invalido', 'O nome so pode conter letras, espacos, apostrofos e hifens', pathlogs)
             continue
 
         # Deve conter pelo menos duas palavras (primeiro e último nome)
         if len(nome.split()) < 2:
             print("Introduza o nome completo. O nome deve conter pelo menos duas palavras.")
+            Logs_erros.logs_erro(103,'Nome Invalido', 'O nome deve conter pelo menos duas palavras', pathlogs)
             continue
 
         # Todas as palavras são adicionadas com a primeira letra maiúscula na base de dados
@@ -59,7 +64,7 @@ def validar_data_nascimento(tipo_pessoa, edicao=False):
             len(partes_data[1]) != 2 or not partes_data[1].isascii() or not partes_data[1].isdigit() or
             len(partes_data[2]) != 2 or not partes_data[2].isascii() or not partes_data[2].isdigit()):
 
-            print("Formato de data inválido. Utilize o formato AAAA-MM-DD.")
+            print("Formato de data invalido. Utilize o formato AAAA-MM-DD.")
             continue
 
         try:
@@ -81,11 +86,13 @@ def validar_data_nascimento(tipo_pessoa, edicao=False):
             # Verificar se a data de nascimento não é futura
             if data > hoje:
                 print("A data de nascimento não pode ser futura.")
+                Logs_erros.logs_erro(401,'Data Invalida', 'Nao se aceita uma data futura como data de nascimento', pathlogs)
                 continue
 
             # Verificar se tem pelo menos 18 anos e não mais que 123 anos
             elif idade < 18:
                 print(f"O {tipo_pessoa} deve ter pelo menos 18 anos.")
+                Logs_erros.logs_erro(402,'Data Invalida', 'Idade inferior a 18 anos', pathlogs)
                 continue
 
             elif idade > 123:
@@ -96,6 +103,7 @@ def validar_data_nascimento(tipo_pessoa, edicao=False):
 
         except ValueError: # Se o utilizador introduzir datas inválidas, como 2002-02-30, o método strptime() gera um ValueError que é tratado em try/except
             print("Data inválida. Verifique o dia, o mês e o ano introduzidos.")
+            Logs_erros.logs_erro(403,'Data Invalida', 'A data nao foi colocada corretamente, ou tem letras ou nao esta completa', pathlogs)
 
 
 def validar_sexo(edicao=False):
@@ -137,11 +145,13 @@ def validar_contacto_telefonico(edicao=False):
         # Verificar se o campo está vazio
         if contacto_telefonico == "":
             print("O contacto telefónico não pode estar vazio.")
+            Logs_erros.logs_erro(301,'Numero invalido', 'Nao escreveu o numero do contacto', pathlogs)
             continue
 
         # Verificar se contém apenas algarismos, espaços e o sinal + inicial
         if not all(caracter.isascii() and caracter.isdigit() or caracter == " " for caracter in contacto_telefonico.lstrip("+")) or contacto_telefonico.count("+") > 1 or ("+" in contacto_telefonico and not contacto_telefonico.startswith("+")):
             print("O contacto telefónico contém caracteres inválidos.")
+            Logs_erros.logs_erro(302,'Numero invalido', 'O contacto contem caracteres invalidos', pathlogs)
             continue
 
         try:
@@ -151,6 +161,7 @@ def validar_contacto_telefonico(edicao=False):
             # Verificar se o número respeita as regras de numeração do país
             if not phonenumbers.is_valid_number(numero):
                 print("Contacto telefónico inválido.")
+                Logs_erros.logs_erro(303,'Numero invalido', 'O contacto nao existe', pathlogs)
                 continue
 
             # Guardar o número no formato internacional E.164, incluindo o indicativo do país, sem espaços
@@ -159,6 +170,7 @@ def validar_contacto_telefonico(edicao=False):
 
         except phonenumbers.NumberParseException:
             print("Número inválido. Verifique o indicativo e os algarismos introduzidos.")
+            Logs_erros.logs_erro(304,'Numero invalido', 'O numero nao foi colocado corretamente, ver indicativo ou algarismos', pathlogs)
 
 
 def validar_email(edicao=False):
@@ -172,11 +184,13 @@ def validar_email(edicao=False):
         # Verificar se o email está vazio
         if email == "":
             print("O email não pode estar vazio.")
+            Logs_erros.logs_erro(201,'Email invalido', 'O campo email esta vazio', pathlogs)
             continue
 
         # Verificar se o email contém exatamente um símbolo @
         if email.count("@") != 1:
             print("Email inválido. Deve conter exatamente um símbolo @.")
+            Logs_erros.logs_erro(202,'Email invalido', 'Deve conter exatamente um simbolo @.', pathlogs)
             continue
 
         # Separar o email na parte anterior e posterior ao @
@@ -185,26 +199,31 @@ def validar_email(edicao=False):
         # Verificar se ambas as partes estão preenchidas
         if utilizador == "" or dominio == "":
             print("Email inválido. Introduza um endereço completo.")
+            Logs_erros.logs_erro(203,'Email invalido', 'Endereço de email incompleto', pathlogs)
             continue
 
         # Verificar se o domínio (parte depois do @) contém apenas letras, números, pontos e hífenes
         if not all(caracter.isascii() and (caracter.isalnum() or caracter in ".-") for caracter in dominio):
             print("Email inválido. O domínio contém caracteres inválidos.")
+            Logs_erros.logs_erro(204,'Email invalido', 'O campo email contem caracteres invalidos', pathlogs)
             continue
 
         # Verificar se existem espaços no email
         if any(caracter.isspace() for caracter in email):
             print("O email não pode conter espaços.")
+            Logs_erros.logs_erro(205,'Email invalido', 'O campo email contem espaços', pathlogs)
             continue
 
         # Verificar se o domínio contém um ponto
         if "." not in dominio:
             print("Email inválido. O domínio deve conter um ponto.")  # como por exemplo .com, .pt ou .org
+            Logs_erros.logs_erro(206,'Email invalido', 'O campo email nao tem o dominio correto', pathlogs)
             continue
 
         # Verificar se o email contém pontos consecutivos
         if ".." in email:
             print("Email inválido. Não pode conter pontos consecutivos.")
+            Logs_erros.logs_erro(207,'Email invalido', 'Pontos consecutivos detetados no email', pathlogs)
             continue
 
         # Separar o domínio em partes para verificar a posição dos hífenes
@@ -213,11 +232,13 @@ def validar_email(edicao=False):
         # Verificar se alguma parte do domínio começa ou termina com um hífen
         if any(parte.startswith("-") or parte.endswith("-") for parte in partes_dominio):
             print("Email inválido. O domínio não pode começar ou terminar com hífenes.")
+            Logs_erros.logs_erro(208,'Email invalido', 'O dominio do email esta a comecar ou terminar com hifenes', pathlogs)
             continue
 
         # Verificar se as partes do email não começam nem terminam com pontos
         if utilizador.startswith(".") or utilizador.endswith(".") or dominio.startswith(".") or dominio.endswith("."):
             print("Email inválido. As partes do endereço não podem começar ou terminar com um ponto.")
+            Logs_erros.logs_erro(209,'Email invalido', 'As partes do endereço estao a começar ou terminar com um ponto', pathlogs)
             continue
 
         # Verificar se a extensão do domínio contém pelo menos duas letras
@@ -225,6 +246,7 @@ def validar_email(edicao=False):
 
         if len(extensao) < 2 or not extensao.isascii() or not extensao.isalpha():
             print("Email inválido. A extensão do domínio deve conter pelo menos duas letras.")
+            Logs_erros.logs_erro(210,'Email invalido', 'Extensao do dominio do email incorreta', pathlogs)
             continue
 
         # Terminar o ciclo quando o email passa todas as validações
@@ -239,6 +261,7 @@ def validar_nif_novo():
         # Verificar se o NIF contém exatamente 9 dígitos de 0 a 9
         if len(nif) != 9 or not nif.isascii() or not nif.isdigit():
             print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
+            Logs_erros.logs_erro(501,'NIF invalido', 'Numero de caracteres diferente de 9', pathlogs)
             continue
 
         # Calcular o dígito de controlo do NIF para verificar se o NIF é matematicamente válido em Portugal
@@ -256,6 +279,7 @@ def validar_nif_novo():
         # Comparar o dígito calculado com o último dígito do NIF
         if digito_controlo != int(nif[8]):
             print("NIF inválido. O dígito de controlo não está correto.")
+            Logs_erros.logs_erro(502,'NIF invalido', 'Digito de controlo incorreto', pathlogs)
             continue
 
         return nif
@@ -273,6 +297,7 @@ def validar_ordenado(edicao=False):
             # Verificar se o ordenado é finito: se for negativo, infinito ou NaN (Not a Number) é bloqueado
             if ordenado < 0 or not math.isfinite(ordenado):  # Pode ser zero no registo, mas não permite arrendar um imóvel
                 print("O ordenado mensal deve ser um valor não negativo e finito.")
+                Logs_erros.logs_erro(601,'Ordenado invalido', 'Valor inserido negativo ou não finito', pathlogs)
                 continue
 
             return ordenado
@@ -280,6 +305,7 @@ def validar_ordenado(edicao=False):
         except ValueError:
             # Tratar entradas que não podem ser convertidas para números
             print("Introduza um valor numérico válido para o ordenado.")
+            Logs_erros.logs_erro(602,'Ordenado invalido', 'O valor introduzido contem letras', pathlogs)
 
 
 def procurar_nif_existente(cursor, tabela, tipo_pessoa, operacao):
@@ -290,11 +316,13 @@ def procurar_nif_existente(cursor, tabela, tipo_pessoa, operacao):
 
         if nif == "0":
             print(f"\n{operacao} cancelada.")
+            Logs_erros.logs_erro(701,'Operacao cancelada', 'Utilizador cancelou operacao', pathlogs)
             return None
 
         # Verificar se o NIF contém exatamente 9 dígitos
         if len(nif) != 9 or not nif.isascii() or not nif.isdigit():
             print("NIF inválido. Deve conter exatamente 9 dígitos numéricos.")
+            Logs_erros.logs_erro(702,'Operacao invalida', 'NIF com numero diferente de 9 caracteres', pathlogs)
             continue
 
         # Confirmar a existência na base de dados
@@ -303,6 +331,7 @@ def procurar_nif_existente(cursor, tabela, tipo_pessoa, operacao):
 
         if pessoa is None:
             print(f"\nNão existe nenhum {tipo_pessoa} registado com esse NIF.")
+            Logs_erros.logs_erro(703,'Operacao invalida', 'Falta de correspondencia de pessoa com o NIF', pathlogs)
             continue
 
         return nif, pessoa[0]
@@ -355,6 +384,7 @@ def adicionar_proprietario():
     except sqlite3.IntegrityError:
         # Tratar erros relacionados com restrições da base de dados
         print("\nErro! Não foi possível registar o proprietário. Verifique se o NIF já existe.")
+        Logs_erros.logs_erro(704,'Operacao invalida', 'NIF existente na base de dados', pathlogs)
 
         # Anular eventuais alterações não guardadas
         if conexao is not None:
@@ -363,6 +393,7 @@ def adicionar_proprietario():
     except sqlite3.Error as e:
         # Tratar outros erros relacionados com a base de dados
         print(f"\nErro ao registar proprietário: {e}")
+        Logs_erros.logs_erro(705,'Operacao invalida', 'Erro ao registar proprietario', pathlogs)
 
         # Anular eventuais alterações não guardadas
         if conexao is not None:
@@ -406,6 +437,7 @@ def consultar_proprietarios():
 
     except sqlite3.Error as e:
         print(f"\nErro ao consultar proprietários: {e}")
+        Logs_erros.logs_erro(801,'Consulta invalida', 'Erro de consulta de proprietario', pathlogs)
 
     finally:
         # Fechar a ligação à base de dados, caso tenha sido estabelecida
@@ -530,6 +562,7 @@ def editar_proprietarios():
     except sqlite3.Error as e:
         # Tratar erros relacionados com a base de dados
         print(f"\nErro ao editar proprietário: {e}")
+        Logs_erros.logs_erro(802,'Erro de edicao bd', 'Erro de edicao de proprietario na bd', pathlogs)
 
         if conexao is not None:
             conexao.rollback()
@@ -576,6 +609,7 @@ def eliminar_proprietarios():
         # Impedir a eliminação se existirem imóveis associados
         if numero_imoveis > 0:
             print("\nNão é possível eliminar este proprietário.")
+            Logs_erros.logs_erro(803,'Operação anulada', 'Operacoes de eliminacao de proprietarios com imoveis existentes sao impossiveis', pathlogs)
 
             if numero_imoveis == 1:
                 print("Existe 1 imóvel associado a este proprietário.")
@@ -611,6 +645,7 @@ def eliminar_proprietarios():
         # Impedir a eliminação caso existam outras relações protegidas
         print("\nNão foi possível eliminar o proprietário.")
         print("Existem registos associados que impedem a eliminação.")
+        Logs_erros.logs_erro(804,'Operação anulada', 'Existem registos em conflito com esta operacao', pathlogs)
 
         if conexao is not None:
             conexao.rollback()
@@ -618,6 +653,7 @@ def eliminar_proprietarios():
     except sqlite3.Error as e:
         # Tratar outros erros relacionados com a base de dados
         print(f"\nErro ao eliminar proprietário: {e}")
+        Logs_erros.logs_erro(805,'Operação anulada', 'Nao pode eliminar proprietario', pathlogs)
 
         if conexao is not None:
             conexao.rollback()
@@ -675,6 +711,7 @@ def adicionar_inquilino():
     except sqlite3.IntegrityError:
         # Tratar erros relacionados com restrições da base de dados
         print("\nErro! Não foi possível registar o inquilino. Verifique se o NIF já existe.")
+        Logs_erros.logs_erro(806,'Operação anulada', 'O NIF já exite na bd inquilino', pathlogs)
 
         # Anular eventuais alterações não guardadas
         if conexao is not None:
@@ -683,6 +720,7 @@ def adicionar_inquilino():
     except sqlite3.Error as e:
         # Tratar outros erros relacionados com a base de dados
         print(f"\nErro ao registar inquilino: {e}")
+        Logs_erros.logs_erro(807,'Operação anulada', 'Erro de registo de inquilino', pathlogs)
 
         # Anular eventuais alterações não guardadas
         if conexao is not None:
@@ -726,6 +764,7 @@ def consultar_inquilinos():
 
     except sqlite3.Error as e:
         print(f"\nErro ao consultar inquilinos: {e}")
+        Logs_erros.logs_erro(808,'Operação anulada', 'Erro ao consultar inquilinos', pathlogs)
 
     finally:
         # Fechar a ligação à base de dados, caso tenha sido estabelecida
@@ -775,6 +814,7 @@ def editar_inquilinos():
         # Verificar se foi selecionado pelo menos um campo
         if len(campos_selecionados) == 0:
             print("\nNão selecionou nenhum campo para alterar.")
+            Logs_erros.logs_erro(809,'Operação anulada', 'Nenhum campo selecionado para alteracao', pathlogs)
             return
 
         novos_valores = {}  # Guardar os novos valores num dicionário
@@ -859,6 +899,7 @@ def editar_inquilinos():
     except sqlite3.Error as e:
         # Tratar erros relacionados com a base de dados
         print(f"\nErro ao editar inquilino: {e}")
+        Logs_erros.logs_erro(810,'Operação anulada', 'Erro a editar inquilino', pathlogs)
 
         if conexao is not None:
             conexao.rollback()
@@ -906,6 +947,7 @@ def eliminar_inquilinos():
         # Impedir a eliminação se existirem imóveis associados
         if numero_imoveis > 0:
             print("\nNão é possível eliminar este inquilino.")
+            Logs_erros.logs_erro(811,'Operação anulada', 'Nao pode eliminar inquilino selecionado', pathlogs)
 
             if numero_imoveis == 1:
                 print("Existe 1 imóvel associado a este inquilino.")
@@ -940,6 +982,7 @@ def eliminar_inquilinos():
     except sqlite3.IntegrityError:
         # Impedir a eliminação caso existam relações protegidas
         print("\nNão foi possível eliminar o inquilino.")
+        Logs_erros.logs_erro(811,'Operação anulada', 'Nao pode eliminar inquilino selecionado', pathlogs)
         print("Existem registos associados que impedem a eliminação.")
 
         if conexao is not None:
@@ -948,6 +991,7 @@ def eliminar_inquilinos():
     except sqlite3.Error as e:
         # Tratar outros erros relacionados com a base de dados
         print(f"\nErro ao eliminar inquilino: {e}")
+        Logs_erros.logs_erro(811,'Operação anulada', 'Nao pode eliminar inquilino selecionado', pathlogs)
 
         if conexao is not None:
             conexao.rollback()
