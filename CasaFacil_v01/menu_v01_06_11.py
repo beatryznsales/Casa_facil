@@ -1,3 +1,4 @@
+
 ## inquirer
 #### Adicionar uma contagem para que sempre que um imovel seja adicionado, o proprietario ganhe +1 no numero de imoveis que este tenha
 #### validar todos os inputs pedidos pelo código
@@ -5,14 +6,22 @@
 ## Editar informações: Permitir editar os dados das tabelas para as 3 entidades
 ## Adicionar erros LOG
 
-# Para phonenumbers e inquirer, deve-se preparar um ficheiro requirements.txt para facilitar a instalação dessas dependências nos computadores externos
+# Para phonenumbers, inquirer e rich, deve-se preparar um ficheiro requirements.txt para facilitar a instalação dessas dependências nos computadores externos
 
 import os
 from operacoes.imoveis import *
 from operacoes.proprietario_inquilinos import *
-import inquirer   
+import inquirer
 import sys
+
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
+
 sys.path.append(os.path.realpath(".")) # adiciona o directorio de trabalho ao módulo de procura do python, permitindo importar modulos locais e scripts sem ter de instalar
+
+# Inicializar a consola para apresentar os elementos gráficos do Rich
+console = Console()
 
 # Obter o caminho completo da pasta onde o programa está guardado
 
@@ -21,56 +30,79 @@ sys.path.append(os.path.realpath(".")) # adiciona o directorio de trabalho ao m�
 # os.path.dirname() devolve a pasta onde o ficheiro está guardado
 pasta_programa = os.path.dirname(os.path.abspath(__file__))
 
-# Construir o caminho da base de dados na pasta do programa 
+# Construir o caminho da base de dados na pasta do programa
 # os.path.join() junta o caminho da pasta ao nome do ficheiro
 base_de_dados = os.path.join(pasta_programa, "casa_facil.db")
 
+
+#####################################     FUNÇÃO AUXILIAR PARA OS MENUS     ############################################################################################################################
+
+
+def mostrar_cabecalho(titulo):
+
+    # Criar o nome da aplicação, centrado dentro da moldura
+    texto = Text("CASAFÁCIL LDA.", style="bold bright_cyan", justify="center")
+
+    # Criar uma moldura mais compacta e ligeiramente mais larga
+    painel = Panel(
+        texto,
+        title=" SISTEMA DE GESTÃO IMOBILIÁRIA ",
+        title_align="center",
+        border_style="bright_blue",
+        padding=(0, 5),
+        width=52
+    )
+
+    # Apresentar o cabeçalho no terminal
+    console.print()
+    console.print(painel)
+
+    # Apresentar o título do menu 
+    console.print(f"\n{titulo}", style="bold bright_cyan")
+
+    # Apresentar as instruções de navegação e uma linha separadora
+    console.print("Use ↑ ↓ para navegar e Enter para selecionar.", style="dim yellow")
+    console.print("─" * 52, style="bright_blue\n")
+
+
 ########## O menu principal precisa ficar abaixo das funções, para que estas possam ser chamadas quando o utilizador escolher a opção correspondente no menu.
+
 #####################################     MENU PRINCIPAL     ############################################################################################################################
 
 def menu_principal():
 
     # Menu principal da aplicação - o utilizador fica no menu principal até escolher a opção de sair da aplicação.
     # Permite escolher entre a gestão de imóveis, inquilinos e proprietários, ou sair da aplicação.
-    
-    if os.name == "nt":   # Limpar o terminal de forma compativel a diferentes sistemas operativos
+
+    if os.name == "nt":   # Limpar o terminal de forma compatível com diferentes sistemas operativos
         os.system("cls")
     else:
         os.system("clear")
-    
-    while True:
-        print("\n" + "=" * 40)
-        print("   CASAFÁCIL LDA. - GESTÃO DE IMÓVEIS")
-        print("=" * 40)
-        print("") 
-        print("Use as setas ⬆ ⬇︎ para navegar no Menu.") 
-        print("")
-       
 
-        #print("1. Gestão de Imóveis")
-        #print("2. Gestão de Inquilinos")
-        #print("3. Gestão de Proprietários")
-       # print("0. Sair")
-        #print("=" * 40)
- 
-        #opcao = input("Escolha uma opção: ").strip()
-        menu=[inquirer.List('opcao',
-                            message="Escolha o que quer fazer",
-                            choices=["1. Gestão de Imóveis", "2. Gestão de Inquilinos","3. Gestão de Proprietários","0. Sair"]
-            ),
+    while True:
+
+        mostrar_cabecalho("⫶☰  MENU PRINCIPAL")
+
+        menu = [inquirer.List('opcao',
+                message="Escolha o que quer fazer",
+                choices=["1. Gestão de Imóveis", "2. Gestão de Inquilinos", "3. Gestão de Proprietários", "0. Sair"]
+            )
         ]
 
         answers = inquirer.prompt(menu)
-        opcao = answers['opcao'][0]  # Extrair o primeiro caractere da string selecionada, que corresponde à opção escolhida (1, 2, 3 ou 0)
 
+        # Terminar o menu se o utilizador cancelar
+        if answers is None:
+            break
 
+        opcao = answers['opcao'][0]  # Extrair o primeiro caractere da opção selecionada
 
         if opcao == "1":
             menu_imoveis()
- 
+
         elif opcao == "2":
             menu_inquilinos()
- 
+
         elif opcao == "3":
             menu_proprietarios()
 
@@ -83,12 +115,16 @@ def menu_principal():
 
         elif opcao == "":
             print("Não introduziu nenhuma opção. Tente novamente.")
- 
+
         else:
             print("Opção inválida! Escolha um número entre 0 e 3.")
 
-#modulo inquirer - aplicado para criar menus interativos no terminal, permitindo ao utilizador escolher opções de forma mais intuitiva e visualmente agradável. O módulo inquirer facilita a criação de listas de opções, prompts e outros elementos de interface de linha de comando.
 
+# Módulo inquirer - aplicado para criar menus interativos no terminal, permitindo ao utilizador escolher opções de forma mais intuitiva e visualmente agradável.
+# O módulo inquirer facilita a criação de listas de opções, prompts e outros elementos de interface de linha de comando.
+
+
+#####################################     MENU DOS IMÓVEIS     ############################################################################################################################
 
 def menu_imoveis():
 
@@ -96,18 +132,25 @@ def menu_imoveis():
         os.system("cls")
     else:
         os.system("clear")
-    
-    while True:
-        print("\n--- GESTÃO DE IMÓVEIS ---")
 
-        menu=[inquirer.List('opcao',
-            message="Escolha o que quer fazer",
-            choices=["1. Adicionar imóvel", "2. Consultar todos os imóveis","3. Consultar imóveis disponíveis", "4. Consultar imóveis alugados", "5. Alterar dados de um imóvel", "6. Atribuir imóvel a um inquilino", "7. Encerrar contrato de arrendamento", "0. Voltar ao menu principal"]
-            ),
+    while True:
+
+        mostrar_cabecalho("🏠︎ GESTÃO DE IMÓVEIS")
+
+        menu = [inquirer.List('opcao',
+                message="Escolha o que quer fazer",
+                choices=["1. Adicionar imóvel", "2. Consultar todos os imóveis", "3. Consultar imóveis disponíveis", "4. Consultar imóveis alugados", "5. Alterar dados de um imóvel", "6. Atribuir imóvel a um inquilino", "7. Encerrar contrato de arrendamento", "0. Voltar ao menu principal"]
+            )
         ]
+
         answers = inquirer.prompt(menu)
-        opcao = answers['opcao'][0]  # Extrair o primeiro caractere da string selecionada, que corresponde à opção escolhida (1, 2, 3 ou 0)
-                 
+
+        # Terminar o menu se o utilizador cancelar
+        if answers is None:
+            break
+
+        opcao = answers['opcao'][0]  # Extrair o primeiro caractere da opção selecionada
+
         if opcao == "1":
             adicionar_imovel()
 
@@ -137,39 +180,9 @@ def menu_imoveis():
 
         else:
             print("Opção inválida!")
- 
-
-def menu_inquilinos():
-
-    if os.name == "nt":
-        os.system("cls")
-    else:
-        os.system("clear")
 
 
-    while True:
-
-        menu=[inquirer.List('opcao',
-                    message="\n--- GESTÃO DE INQUILINOS ---",
-                    choices=["1. Registar inquilino", "2. Consultar todos os inquilinos","0. Voltar ao menu principal"]
-                ),
-            ]
-        answers = inquirer.prompt(menu)
-        opcao = answers['opcao'][0]  # Extrair o primeiro caractere da string selecionada, que corresponde à opção escolhida (1, 2, 3 ou 0)
-
- 
-        if opcao == "1":
-            adicionar_inquilino()
-
-        elif opcao == "2":
-            consultar_inquilinos()
-
-        elif opcao == "0":
-            break
-
-        else:
-            print("Opção inválida!")
-
+#####################################     MENU DOS PROPRIETÁRIOS     ############################################################################################################################
 
 def menu_proprietarios():
 
@@ -178,10 +191,9 @@ def menu_proprietarios():
     else:
         os.system("clear")
 
-
     while True:
 
-        print("\n--- GESTÃO DE PROPRIETÁRIOS ---")
+        mostrar_cabecalho("𖨆 GESTÃO DE PROPRIETÁRIOS")
 
         menu = [inquirer.List("opcao",
                 message="Escolha o que quer fazer",
@@ -212,6 +224,8 @@ def menu_proprietarios():
             break
 
 
+#####################################     MENU DOS INQUILINOS     ############################################################################################################################
+
 def menu_inquilinos():
 
     if os.name == "nt":
@@ -219,10 +233,9 @@ def menu_inquilinos():
     else:
         os.system("clear")
 
-
     while True:
 
-        print("\n--- GESTÃO DE INQUILINOS ---")
+        mostrar_cabecalho("𖨆𖨆 GESTÃO DE INQUILINOS")
 
         menu = [inquirer.List("opcao",
                 message="Escolha o que quer fazer",
@@ -252,5 +265,6 @@ def menu_inquilinos():
         elif opcao == "0":
             break
 
-menu_principal() # de forma a que o menu principal seja chamado quando o programa é executado, iniciando a aplicação.
 
+# Chamar o menu principal quando o programa é executado
+menu_principal()
