@@ -636,6 +636,8 @@ def _alterar_dados_imovel ():
         return
 
     id_imovel_selecionado = imovel_selecionado[0]
+    # Apresentar a renda atual antes de iniciar a edição do imóvel.
+    print(f"Renda mensal atual: {imovel_selecionado[5]:.2f} €")
     alteracao_guardada = False  # Indica se já foi guardada alguma alteração na base de dados
 
     while True:
@@ -699,7 +701,7 @@ def _alterar_dados_imovel ():
 
             if alteracoes_imovel(id_imovel_selecionado, "renda", nova_renda):
                 alteracao_guardada = True
-                print(f"Valor da renda alterado com sucesso. Novo valor {nova_renda}")
+                print(f"Valor da renda alterado com sucesso. Novo valor: {nova_renda:.2f} €")
 
         elif opcao_escolhida == "4":
             pergunta_estado = [
@@ -851,9 +853,9 @@ def fornecer_validar_renda(messagem, permitir_cancelamento=True):
                     continue
             renda = float(valor.replace(",", "."))
 
-            # Verificar se a renda é positiva e finita, rejeitando valores negativos, zero, infinito e NaN
-            if renda <= 0 or not math.isfinite(renda):
-                print("A renda deve ser um valor positivo e finito.")
+            # Verificar se a renda é finita e está entre os limites definidos para o projeto.
+            if not math.isfinite(renda) or renda < 50 or renda > 20000:
+                print("A renda mensal deve estar entre 50 € e 20 000 €.")
                 Logs_erros.logs_erro(1014,'Erro de Validacao', 'Valor de renda não aceite', pathlogs)
                 continue
             return renda

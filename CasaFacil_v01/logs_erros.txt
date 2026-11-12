@@ -117,3 +117,24 @@ Timestamp: 2026-11-12 18:36:46.933316
 
 Mensagem: Nenhum campo selecionado para alteracao
 
+
+ID: 915
+Titulo: Campo invalido
+Timestamp: 2026-11-12 18:51:38.786811
+
+Mensagem: Formato de Código Postal
+
+
+ID: 915
+Titulo: Campo invalido
+Timestamp: 2026-11-12 18:52:03.898935
+
+Mensagem: Formato de Código Postal
+
+
+ID: 1008
+Titulo: Erro de Validacao
+Timestamp: 2026-11-12 18:53:00.141166
+
+Mensagem: Erro ao adicionar imovel
+
