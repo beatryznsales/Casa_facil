@@ -6,6 +6,7 @@ import requests
 import unicodedata
 from . import Logs_erros
 from .tabelas import mostrar_tabela 
+from .cancelamentos import pedir_input, OperacaoCancelada, informar_cancelamento  # Permite escrever "voltar" para cancelar a operação e regressar ao menu anterior.
 
 pasta_programa = os.path.dirname(os.path.abspath(__file__))
 
@@ -14,12 +15,20 @@ pasta_programa = os.path.dirname(os.path.abspath(__file__))
 base_de_dados = os.path.join(pasta_programa, "../casa_facil.db")
 pathlogs = os.path.join(pasta_programa, "../logs_erros.txt")
 
-def adicionar_imovel():
+def adicionar_imovel(): # Permitir cancelar a operação através da palavra "voltar"
+    try:
+        return _adicionar_imovel()
+    except OperacaoCancelada:
+        informar_cancelamento()
+
+
+def _adicionar_imovel():
     print("\n--- ADICIONAR NOVO IMÓVEL ---")
+    print("Escreva 'voltar' em qualquer campo para cancelar a operação.")
 
     # Pedir o NIF do proprietário (Para testes usar o nif: 248516971)
     while True:
-        nif_proprietario = input("NIF do proprietário responsável: ").strip()
+        nif_proprietario = pedir_input("NIF do proprietário responsável: ").strip()
 
         # Verificar se o NIF contém exatamente 9 dígitos de 0 a 9
         if (len(nif_proprietario) != 9 or not nif_proprietario.isascii() or not nif_proprietario.isdigit()):
@@ -59,7 +68,7 @@ def adicionar_imovel():
 
     # Validar o nome da rua e o número da porta
     while True:
-        rua = input("Nome da rua (sem número da porta): ").strip()
+        rua = pedir_input("Nome da rua (sem número da porta): ").strip()
 
         if rua == "":
             print("O nome da rua não pode estar vazio.")
@@ -105,7 +114,7 @@ def adicionar_imovel():
 
         # Validar o número da porta
         while True:
-            num_porta = input("Número da porta (ex.: 25 ou 25A): ").strip().upper()
+            num_porta = pedir_input("Número da porta (ex.: 25 ou 25A): ").strip().upper()
 
             if num_porta == "":
                 print("O número da porta não pode estar vazio.")
@@ -163,7 +172,7 @@ def adicionar_imovel():
             print("\n")
 
             while True:
-                resposta = input("Esse número faz parte do nome oficial da rua? (Sim [S]/Não [N]): ").strip().lower()
+                resposta = pedir_input("Esse número faz parte do nome oficial da rua? (Sim [S]/Não [N]): ").strip().lower()
                 if resposta in ["sim", "s"]:
                     break
 
@@ -183,7 +192,7 @@ def adicionar_imovel():
 
     # Validar o andar/fração (campo opcional)
     while True:
-        num_apartamento = input("Andar/Fração (se houver, ex.: 2.º Esq., R/C ou 3B): ").strip()
+        num_apartamento = pedir_input("Andar/Fração (se houver, ex.: 2.º Esq., R/C ou 3B): ").strip()
 
         if num_apartamento == "":
             break
@@ -211,7 +220,7 @@ def adicionar_imovel():
         if alterar_codigo_postal:
             # Validar o código postal português
             while True:
-                codigo_postal = input("Código postal (1234-567): ").strip()
+                codigo_postal = pedir_input("Código postal (1234-567): ").strip()
 
                 partes = codigo_postal.split("-")
 
@@ -233,7 +242,7 @@ def adicionar_imovel():
         if alterar_cidade:
             # Validar o nome da cidade  
             while True:
-                cidade = input("Cidade: ").strip()
+                cidade = pedir_input("Cidade: ").strip()
 
                 if cidade == "":
                     print("A cidade não pode estar vazia.")
@@ -327,7 +336,7 @@ def adicionar_imovel():
 
     # Validar o tipo de imóvel
     while True:
-        tipo = input("Tipo de imóvel (Moradia, Apartamento, Quinta): ").strip().lower()
+        tipo = pedir_input("Tipo de imóvel (Moradia, Apartamento, Quinta): ").strip().lower()
 
         if tipo in ["moradia", "apartamento", "quinta"]:
             tipo = tipo.capitalize()
@@ -341,7 +350,7 @@ def adicionar_imovel():
 
     # Validar o estado do imóvel
     while True:
-        estado = input("Estado do imóvel (Nova, Seminova, Usada, Em mau estado): ").strip().lower()
+        estado = pedir_input("Estado do imóvel (Nova, Seminova, Usada, Em mau estado): ").strip().lower()
 
         if estado == "nova":
             estado = "Nova"
@@ -593,66 +602,121 @@ def consultar_imoveis_alugados():
 
         input("\nPressione Enter para voltar ao menu...")
 
-def alterar_dados_imovel ():
+def alterar_dados_imovel():
+    # Permitir cancelar a operação através da palavra "voltar"
+    try:
+        return _alterar_dados_imovel()
+    except OperacaoCancelada:
+        informar_cancelamento()
+
+
+def _alterar_dados_imovel ():
     #Adicionar opções de alterações como: Duracao, estado ou renda
-    id_imovel_selecionado = selecionar_imovel()[0]
-    opcoes = [
-        "1.Alterar duração do contrato", 
-        "2.Alterar estado do imovel", 
-        "3. Alterar valor da renda", 
-        "4. Alterar tipo do imóvel", 
-        "5. Alterar número de quartos",
-        "0. Voltar"
-    ]
+    imovel_selecionado = selecionar_imovel(permitir_voltar=True)
+    if imovel_selecionado is None:
+        return
+
+    id_imovel_selecionado = imovel_selecionado[0]
+    alteracao_guardada = False  # Indica se já foi guardada alguma alteração na base de dados
+
     while True:
+        opcoes = [
+            "1.Alterar duração do contrato",
+            "2.Alterar estado do imovel",
+            "3. Alterar valor da renda",
+            "4. Alterar tipo do imóvel",
+            "5. Alterar número de quartos",
+            "0. Terminar edição" if alteracao_guardada else "0. Voltar ao menu anterior"
+        ]
+
+        if not alteracao_guardada:
+            print("\nAntes de guardar a primeira alteração, pode escrever 'voltar' para cancelar.")
+
         pergunta = [
             inquirer.List('alteracao',
                 message="Indique o que deseja editar nesse imovel",
-                choices= opcoes,
+                choices=opcoes,
             )
         ]
-            
+
         selecao = inquirer.prompt(pergunta)
+        if selecao is None:
+            return
+
         opcao_escolhida = selecao["alteracao"][0]
         if opcao_escolhida == "1":
             #Adicionar validação
-            nova_duracao = input("Informe a nova duraçao do contrato: ")
-            alteracoes_imovel(id_imovel_selecionado, "duracao", f"'{nova_duracao}'")
+            while True:
+                if alteracao_guardada:
+                    nova_duracao = input("Informe a nova duraçao do contrato: ").strip()
+                    if nova_duracao.lower() == "voltar":
+                        print("Já existem alterações guardadas. Termine a edição através da opção 0.")
+                        continue
+                else:
+                    nova_duracao = pedir_input("Informe a nova duraçao do contrato: ")
+                break
+
+            if alteracoes_imovel(id_imovel_selecionado, "duracao", f"'{nova_duracao}'"):
+                alteracao_guardada = True
+
         elif opcao_escolhida == "2":
             pergunta_estado = [
                 inquirer.List('estado',
                     message="Indique o novo estado do imovel",
-                    choices= ["Novo", "Usado", "Mau Estado", "Remodelado"],
+                    choices=["Novo", "Usado", "Mau Estado", "Remodelado"],
                 )
             ]
-            
+
             respo_novo_estado = inquirer.prompt(pergunta_estado)
-            novo_estado = f"'{respo_novo_estado["estado"]}'"
-            
-            alteracoes_imovel(id_imovel_selecionado, "estado", novo_estado)
+            if respo_novo_estado is None:
+                continue
+            novo_estado = f"'{respo_novo_estado['estado']}'"
+
+            if alteracoes_imovel(id_imovel_selecionado, "estado", novo_estado):
+                alteracao_guardada = True
+
         elif opcao_escolhida == "3":
-            nova_renda = fornecer_validar_renda("Indique o novo valor de renda (€): ")
-            
-            alteracoes_imovel(id_imovel_selecionado, "renda", nova_renda)
-            print(f"Valor da renda alterado com sucesso. Novo valor {nova_renda}")
+            nova_renda = fornecer_validar_renda("Indique o novo valor de renda (€): ", permitir_cancelamento=not alteracao_guardada)
+
+            if alteracoes_imovel(id_imovel_selecionado, "renda", nova_renda):
+                alteracao_guardada = True
+                print(f"Valor da renda alterado com sucesso. Novo valor {nova_renda}")
+
         elif opcao_escolhida == "4":
             pergunta_estado = [
                 inquirer.List('tipo',
                     message="Indique o novo estado do imovel",
-                    choices= ["Apartamento", "Moradia", "Quinta"],
+                    choices=["Apartamento", "Moradia", "Quinta"],
                 )
             ]
-            
+
             resposta = inquirer.prompt(pergunta_estado)
-            novo_tipo = f"'{resposta["tipo"]}'"
-            
-            alteracoes_imovel(id_imovel_selecionado, "tipo", novo_tipo)
+            if resposta is None:
+                continue
+            novo_tipo = f"'{resposta['tipo']}'"
+
+            if alteracoes_imovel(id_imovel_selecionado, "tipo", novo_tipo):
+                alteracao_guardada = True
 
         elif opcao_escolhida == "5":
-            num_quartos = input("Informe o novo número de quartos: ")
-            alteracoes_imovel(id_imovel_selecionado, "quartos", num_quartos)
+            while True:
+                if alteracao_guardada:
+                    num_quartos = input("Informe o novo número de quartos: ").strip()
+                    if num_quartos.lower() == "voltar":
+                        print("Já existem alterações guardadas. Termine a edição através da opção 0.")
+                        continue
+                else:
+                    num_quartos = pedir_input("Informe o novo número de quartos: ")
+                break
+
+            if alteracoes_imovel(id_imovel_selecionado, "quartos", num_quartos):
+                alteracao_guardada = True
 
         elif opcao_escolhida == "0":
+            if alteracao_guardada:
+                print("\nEdição terminada. As alterações efetuadas foram guardadas.")
+            else:
+                informar_cancelamento()
             break
 
 #Funcao permite atualizar informações do imovel com base do Id, coluna e novo valor passado por argumento
@@ -665,17 +729,18 @@ def alteracoes_imovel(imovel_id, coluna, novo_valor):
         #Coloca os argumentos da funcao na chamada de update para a base de dados.
         cursor.execute(f"UPDATE imoveis SET {coluna} = {novo_valor} WHERE id = {int(imovel_id)}")
         conexao.commit()
+        return True
 
     except sqlite3.Error as e:
         print("\nErro ao verificar imóveis disponiveis.", e)
-        return
+        return False
     
     finally:
         if conexao is not None:
             conexao.close()
 
 #Lista os imoveis com base no filtro passado por argumento. Caso vazio, lista sem filtro
-def selecionar_imovel(filtro = ""):
+def selecionar_imovel(filtro = "", permitir_voltar=False):
     #Estabelecer ligação à base de dados
     conexao = sqlite3.connect(base_de_dados)
     cursor = conexao.cursor()
@@ -707,6 +772,10 @@ def selecionar_imovel(filtro = ""):
         if conexao is not None:
             conexao.close()
 
+    # Permitir regressar ao menu anterior antes de selecionar o imóvel a editar
+    if permitir_voltar:
+        escolhas["0. Voltar ao menu anterior"] = None
+
     pergunta = [
         inquirer.List('imovel',
             message="Indique o imóvel que deseja editar",
@@ -715,7 +784,12 @@ def selecionar_imovel(filtro = ""):
     ]
 
     selecao = inquirer.prompt(pergunta)
+    if selecao is None:
+        return None
     morada_escolhida = selecao["imovel"]
+    if permitir_voltar and morada_escolhida == "0. Voltar ao menu anterior":
+        informar_cancelamento()
+        return None
     print(f"Imóvel na morada \"{morada_escolhida} selecionado")
     imovel_selecionado = escolhas[morada_escolhida]
 
@@ -726,7 +800,7 @@ def selecionar_imovel(filtro = ""):
 def fornecer_validar_quartos():
     while True:
         try:
-            quartos = int(input("Número de quartos: ").strip())
+            quartos = int(pedir_input("Número de quartos: ").strip())
 
             if quartos < 0:
                 print("O número de quartos não pode ser negativo.")
@@ -739,13 +813,20 @@ def fornecer_validar_quartos():
 
 #Essa função captura a entrada do utilizador para o valor da renda
 #Utilizada tanto para alteração quanto criação de imóveis
-def fornecer_validar_renda(messagem):
+def fornecer_validar_renda(messagem, permitir_cancelamento=True):
     # Validar o valor mensal da renda
     while True:
         try:
             # Converter o valor introduzido num número decimal
             # .replace(",", ".") permite introduzir a vírgula como separador decimal
-            renda = float(input(messagem).strip().replace(",", "."))
+            if permitir_cancelamento:
+                valor = pedir_input(messagem)
+            else:
+                valor = input(messagem).strip()
+                if valor.lower() == "voltar":
+                    print("Já existem alterações guardadas. Termine a edição através da opção 0.")
+                    continue
+            renda = float(valor.replace(",", "."))
 
             # Verificar se a renda é positiva e finita, rejeitando valores negativos, zero, infinito e NaN
             if renda <= 0 or not math.isfinite(renda):
@@ -759,12 +840,21 @@ def fornecer_validar_renda(messagem):
 
 #Atribui um inquilino existente num imóvel Disponível
 def atribuir_imovel_inquilino():
+    # Permitir cancelar a operação através da palavra "voltar".
+    try:
+        return _atribuir_imovel_inquilino()
+    except OperacaoCancelada:
+        informar_cancelamento()
+
+
+def _atribuir_imovel_inquilino():
+    print("\nEscreva 'voltar' em qualquer campo para cancelar a operação.")
     #Retorna o imóvel disponível escolhido pelo o utilizador
     imovel_selecionado = selecionar_imovel("situacao = 'Disponível'")
     imovel_renda = imovel_selecionado[5] #Pega a sexta coluna da consulta anterior
     imovel_id = imovel_selecionado[0] #Pega a primeira coluna que é o id do imovel
 
-    nif = input("Informe o NIF do inquilino: ") #Pede o nif do inquilino ao utilizador
+    nif = pedir_input("Informe o NIF do inquilino: ") #Pede o nif do inquilino ao utilizador
 
     #Efetua a busca do inquilino filtrando pelo nif
     inquilino = buscar_inquilino(nif)

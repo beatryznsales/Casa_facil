@@ -6,6 +6,7 @@ import math
 import inquirer
 from . import Logs_erros
 from .tabelas import mostrar_tabela 
+from .cancelamentos import pedir_input, OperacaoCancelada, informar_cancelamento   # Permitir ao utilizador escrever "voltar", nos campos que pedem input, para cancelar a operação e regressar ao menu anterior
 
 pasta_programa = os.path.dirname(os.path.abspath(__file__))
 
@@ -22,9 +23,9 @@ def validar_nome(edicao=False):
     # Pedir e validar o nome completo
     while True:
         if edicao:
-            nome = input("\nNovo nome completo: ").strip()
+            nome = pedir_input("\nNovo nome completo: ").strip()
         else:
-            nome = input("Nome completo: ").strip()
+            nome = pedir_input("Nome completo: ").strip()
 
         # Verificar que o nome não pode estar vazio
         if nome == "":
@@ -53,9 +54,9 @@ def validar_data_nascimento(tipo_pessoa, edicao=False):
     # Pedir e validar a data de nascimento
     while True:
         if edicao:
-            data_nascimento = input("\nNova data de nascimento (AAAA-MM-DD): ").strip()
+            data_nascimento = pedir_input("\nNova data de nascimento (AAAA-MM-DD): ").strip()
         else:
-            data_nascimento = input("Data de nascimento (AAAA-MM-DD): ").strip()
+            data_nascimento = pedir_input("Data de nascimento (AAAA-MM-DD): ").strip()
 
         partes_data = data_nascimento.split("-")
 
@@ -111,9 +112,9 @@ def validar_sexo(edicao=False):
     # Pedir e validar o sexo
     while True:
         if edicao:
-            sexo = input("\nSexo (Masculino (M)/Feminino (F)/Outro (O)): ").strip().upper()
+            sexo = pedir_input("\nSexo (Masculino (M)/Feminino (F)/Outro (O)): ").strip().upper()
         else:
-            sexo = input("Sexo (Masculino (M)/Feminino (F)/Outro (O)): ").strip().upper()
+            sexo = pedir_input("Sexo (Masculino (M)/Feminino (F)/Outro (O)): ").strip().upper()
 
         # Verificar se a opção introduzida é válida
         if sexo not in ["MASCULINO", "FEMININO", "OUTRO", "MASCULINO (M)", "FEMININO (F)", "OUTRO (O)", "MASCULINO(M)", "FEMININO(F)", "OUTRO(O)", "M", "F", "O"]:
@@ -139,9 +140,9 @@ def validar_contacto_telefonico(edicao=False):
     # Permite números de telefone fixos e móveis, portugueses e estrangeiros
     while True:
         if edicao:
-            contacto_telefonico = input("\nNovo contacto telefónico (ex.: +351 912345678): ").strip()
+            contacto_telefonico = pedir_input("\nNovo contacto telefónico (ex.: +351 912345678): ").strip()
         else:
-            contacto_telefonico = input("Contacto telefónico (ex.: +351 912345678): ").strip()
+            contacto_telefonico = pedir_input("Contacto telefónico (ex.: +351 912345678): ").strip()
 
         # Verificar se o campo está vazio
         if contacto_telefonico == "":
@@ -178,9 +179,9 @@ def validar_email(edicao=False):
     # Pedir e validar o email
     while True:
         if edicao:
-            email = input("\nNovo email: ").strip()
+            email = pedir_input("\nNovo email: ").strip()
         else:
-            email = input("Email: ").strip()
+            email = pedir_input("Email: ").strip()
 
         # Verificar se o email está vazio
         if email == "":
@@ -257,7 +258,7 @@ def validar_email(edicao=False):
 def validar_nif_novo():
     # Pedir e validar o NIF no registo de um novo proprietário ou inquilino
     while True:
-        nif = input("NIF: ").strip()  # Identificador guardado inicialmente como texto
+        nif = pedir_input("NIF: ").strip()  # Identificador guardado inicialmente como texto
 
         # Verificar se o NIF contém exatamente 9 dígitos de 0 a 9
         if len(nif) != 9 or not nif.isascii() or not nif.isdigit():
@@ -291,9 +292,9 @@ def validar_ordenado(edicao=False):
     while True:
         try:
             if edicao:
-                ordenado = float(input("\nNovo ordenado mensal (€): ").strip().replace(",", "."))
+                ordenado = float(pedir_input("\nNovo ordenado mensal (€): ").strip().replace(",", "."))
             else:
-                ordenado = float(input("Ordenado mensal (€): ").strip().replace(",", "."))
+                ordenado = float(pedir_input("Ordenado mensal (€): ").strip().replace(",", "."))
 
             # Verificar se o ordenado é finito: se for negativo, infinito ou NaN (Not a Number) é bloqueado
             if ordenado < 0 or not math.isfinite(ordenado):  # Pode ser zero no registo, mas não permite arrendar um imóvel
@@ -313,7 +314,7 @@ def procurar_nif_existente(cursor, tabela, tipo_pessoa, operacao):
     # Pedir o NIF até existir na base de dados ou o utilizador cancelar
     # Não é necessário repetir o dígito de controlo: foi validado no registo
     while True:
-        nif = input(f"NIF do {tipo_pessoa} (introduza apenas 0 para cancelar): ").strip()
+        nif = pedir_input(f"NIF do {tipo_pessoa} (introduza apenas 0 para cancelar): ").strip()
 
         if nif == "0":
             print(f"\n{operacao} cancelada.")
@@ -346,27 +347,33 @@ def procurar_nif_existente(cursor, tabela, tipo_pessoa, operacao):
 def adicionar_proprietario():
     # Recolher os dados do novo proprietário.
     print("\n--- REGISTAR PROPRIETÁRIO ---")
+    print("Escreva 'voltar' em qualquer campo para cancelar a operação.")
 
-    # Pedir e validar o nome completo
-    nome = validar_nome()
+    try:
+        # Pedir e validar o nome completo
+        nome = validar_nome()
 
-    # Pedir e validar o NIF
-    nif = validar_nif_novo()
+        # Pedir e validar o NIF
+        nif = validar_nif_novo()
 
-    # Pedir e validar a data de nascimento
-    data_nascimento = validar_data_nascimento("proprietário")
+        # Pedir e validar a data de nascimento
+        data_nascimento = validar_data_nascimento("proprietário")
 
-    # Pedir e validar o sexo
-    sexo = validar_sexo()
+        # Pedir e validar o sexo
+        sexo = validar_sexo()
 
-    # Pedir e validar o contacto telefónico
-    contacto_telefonico = validar_contacto_telefonico()
+        # Pedir e validar o contacto telefónico
+        contacto_telefonico = validar_contacto_telefonico()
 
-    # Pedir e validar o email
-    email = validar_email()
+        # Pedir e validar o email
+        email = validar_email()
 
-    num_habitacoes = 0  # O proprietário começa sem imóveis registados
+        num_habitacoes = 0  # O proprietário começa sem imóveis registados
     
+    except OperacaoCancelada:
+        informar_cancelamento()
+        return
+
     # Inicializar a variável de ligação à base de dados antes do try para verificar em finally se a mesma foi estabelecida
     conexao = None
 
@@ -444,6 +451,7 @@ def consultar_proprietarios():
 
 def editar_proprietarios():
     print("\n--- EDITAR DADOS DO PROPRIETÁRIO ---")
+    print("Escreva 'voltar' para cancelar a operação.")
 
     # Inicializar a variável de ligação à base de dados
     conexao = None
@@ -554,6 +562,11 @@ def editar_proprietarios():
 
         print("\nDados do proprietário atualizados com sucesso!")
 
+    except OperacaoCancelada:
+        informar_cancelamento()
+        if conexao is not None:
+            conexao.rollback()
+
     except sqlite3.Error as e:
         # Tratar erros relacionados com a base de dados
         print(f"\nErro ao editar proprietário: {e}")
@@ -572,6 +585,7 @@ def editar_proprietarios():
 
 def eliminar_proprietarios():
     print("\n--- ELIMINAR PROPRIETÁRIO ---")
+    print("Escreva 'voltar' para cancelar a operação.")
 
     # Inicializar a variável de ligação à base de dados
     conexao = None
@@ -636,6 +650,11 @@ def eliminar_proprietarios():
 
         print("\nProprietário eliminado com sucesso!")
 
+    except OperacaoCancelada:
+        informar_cancelamento()
+        if conexao is not None:
+            conexao.rollback()
+
     except sqlite3.IntegrityError:
         # Impedir a eliminação caso existam outras relações protegidas
         print("\nNão foi possível eliminar o proprietário.")
@@ -666,27 +685,33 @@ def eliminar_proprietarios():
 def adicionar_inquilino():
     # Recolher os dados do novo inquilino.
     print("\n--- REGISTAR INQUILINO ---")
+    print("Escreva 'voltar' em qualquer campo para cancelar a operação.")
 
-    # Pedir e validar o nome completo
-    nome = validar_nome()
+    try:
+        # Pedir e validar o nome completo
+        nome = validar_nome()
 
-    # Pedir e validar o NIF
-    nif = validar_nif_novo()
+        # Pedir e validar o NIF
+        nif = validar_nif_novo()
 
-    # Pedir e validar a data de nascimento
-    data_nascimento = validar_data_nascimento("inquilino")
+        # Pedir e validar a data de nascimento
+        data_nascimento = validar_data_nascimento("inquilino")
 
-    # Pedir e validar o sexo
-    sexo = validar_sexo()
+        # Pedir e validar o sexo
+        sexo = validar_sexo()
 
-    # Pedir e validar o contacto telefónico
-    contacto_telefonico = validar_contacto_telefonico()
+        # Pedir e validar o contacto telefónico
+        contacto_telefonico = validar_contacto_telefonico()
 
-    # Pedir e validar o email
-    email = validar_email()
+        # Pedir e validar o email
+        email = validar_email()
 
-    # Pedir e validar o ordenado mensal
-    ordenado = validar_ordenado()
+        # Pedir e validar o ordenado mensal
+        ordenado = validar_ordenado()
+
+    except OperacaoCancelada:
+        informar_cancelamento()
+        return
 
     # Inicializar a variável de ligação à base de dados antes do try para verificar no finally se a ligação foi estabelecida
     conexao = None
@@ -770,6 +795,7 @@ def consultar_inquilinos():
 
 def editar_inquilinos():
     print("\n--- EDITAR DADOS DO INQUILINO ---")
+    print("Escreva 'voltar' para cancelar a operação.")
 
     # Inicializar a variável de ligação à base de dados
     conexao = None
@@ -890,6 +916,11 @@ def editar_inquilinos():
 
         print("\nDados do inquilino atualizados com sucesso!")
 
+    except OperacaoCancelada:
+        informar_cancelamento()
+        if conexao is not None:
+            conexao.rollback()
+
     except sqlite3.Error as e:
         # Tratar erros relacionados com a base de dados
         print(f"\nErro ao editar inquilino: {e}")
@@ -906,6 +937,7 @@ def editar_inquilinos():
 
 def eliminar_inquilinos():
     print("\n--- ELIMINAR INQUILINO ---")
+    print("Escreva 'voltar' para cancelar a operação.")
 
     # Inicializar a variável de ligação à base de dados
     conexao = None
@@ -972,6 +1004,11 @@ def eliminar_inquilinos():
         conexao.commit()
 
         print("\nInquilino eliminado com sucesso!")
+
+    except OperacaoCancelada:
+        informar_cancelamento()
+        if conexao is not None:
+            conexao.rollback()
 
     except sqlite3.IntegrityError:
         # Impedir a eliminação caso existam relações protegidas
