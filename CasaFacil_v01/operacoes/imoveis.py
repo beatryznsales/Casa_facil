@@ -207,7 +207,7 @@ def _adicionar_imovel():
 
         elif not any(caracter.isalnum() for caracter in num_apartamento):
             print("A identificação do andar/fração deve conter letras ou números.")
-            Logs_erros.logs_erro(913,'Campo invalido', 'Confirme restricoes do campo numero de apartamento', pathlogs)
+            Logs_erros.logs_erro(914,'Campo invalido', 'Confirme restricoes do campo numero de apartamento', pathlogs)
             
         else:
             break
@@ -226,15 +226,19 @@ def _adicionar_imovel():
 
                 if len(partes) != 2:
                     print("Código postal inválido. Utilize o formato 1234-567.")
+                    Logs_erros.logs_erro(915,'Campo invalido', 'Formato de Código Postal', pathlogs)
 
                 elif not (partes[0].isascii() and partes[1].isascii() and partes[0].isdigit() and partes[1].isdigit()):
                     print("O código postal deve conter apenas números e um hífen.")
+                    Logs_erros.logs_erro(915,'Campo invalido', 'Formato de Código Postal', pathlogs)
 
                 elif len(partes[0]) != 4 or len(partes[1]) != 3:
                     print("Código postal inválido. Utilize o formato 1234-567.")
+                    Logs_erros.logs_erro(915,'Campo invalido', 'Formato de Código Postal', pathlogs)
 
                 elif partes[0][0] == "0":
                     print("O código postal não pode começar por zero.")
+                    Logs_erros.logs_erro(915,'Campo invalido', 'Formato de Código Postal', pathlogs)
 
                 else:
                     break
@@ -246,15 +250,19 @@ def _adicionar_imovel():
 
                 if cidade == "":
                     print("A cidade não pode estar vazia.")
+                    Logs_erros.logs_erro(916,'Campo invalido', 'O campo Cidade esta vazio', pathlogs)
 
                 elif len(cidade) > 100:
                     print("O nome da cidade não pode ultrapassar 100 caracteres.")
+                    Logs_erros.logs_erro(917,'Campo invalido', 'Numero de caracteres excedido', pathlogs)
 
                 elif not all(caracter.isalpha() or caracter in " '-" for caracter in cidade):
                     print("A cidade deve conter apenas letras, espaços, hífenes ou apóstrofos.")
+                    Logs_erros.logs_erro(918,'Campo invalido', 'Caracteres invalidos', pathlogs)
 
                 elif not any(caracter.isalpha() for caracter in cidade):
                     print("A cidade deve conter letras.")
+                    Logs_erros.logs_erro(918,'Campo invalido', 'Caracteres invalidos', pathlogs)
 
                 else:
                     break
@@ -280,20 +288,24 @@ def _adicionar_imovel():
                     print("Código postal e cidade confirmados pela API.")
                 else:
                     print("\nAtenção: a cidade não corresponde ao código postal introduzido.")
+                    Logs_erros.logs_erro(1001,'Erro de Validacao', 'Dados de cidade e codigo postal nao correspondentes', pathlogs)
                     print("Verifique o código postal e a cidade antes de continuar.")
                     print("Dados encontrados:", ", ".join(nome for nome in cidades_api if nome))
                     divergencia = True
 
             elif resposta.status_code == 404:
                 print("\nAtenção: código postal não encontrado na API. Confirme os dados introduzidos.")
+                Logs_erros.logs_erro(1002,'Erro de Validacao', 'Ccdigo postal inexistente', pathlogs)
                 divergencia = True
 
             else:
                 print("\nNão foi possível validar o código postal online. O registo vai continuar.")
+                Logs_erros.logs_erro(1003,'Erro de Validacao', 'Codigo postal não foi validado online', pathlogs)
 
         except (requests.RequestException, ValueError, TypeError, KeyError):
             # Falha de Internet, do serviço ou da resposta: não bloquear o registo do imóvel
             print("\nValidação online indisponível. O registo vai continuar normalmente.")
+            Logs_erros.logs_erro(1004,'Erro de Validacao', 'Validacao online indisponivel', pathlogs)
 
         # Se a API detetar uma diferença, permitir corrigir os dados antes de continuar
         if divergencia:
@@ -344,6 +356,7 @@ def _adicionar_imovel():
 
         else:
             print("Tipo de imóvel inválido. Escolha Moradia, Apartamento ou Quinta.")
+            Logs_erros.logs_erro(1005,'Erro de Validacao', 'Tipo Imovel nao correspondente as opcoes', pathlogs)
 
     # Validar o número de quartos
     quartos = fornecer_validar_quartos()
@@ -370,6 +383,7 @@ def _adicionar_imovel():
 
         else:
             print("Estado inválido. Escolha uma das opções apresentadas.")
+            Logs_erros.logs_erro(1006,'Erro de Validacao', 'Opcao inexistente', pathlogs)
 
 
     renda = fornecer_validar_renda("Valor mensal da renda (€): ")
@@ -392,6 +406,7 @@ def _adicionar_imovel():
 
         if cursor.fetchone() is None:
             print(f"\nNão existe nenhum proprietário registado com o NIF {nif_proprietario}.")
+            Logs_erros.logs_erro(1007,'Erro de Validacao', 'NIF nao se encontra no registo de proprietarios', pathlogs)
             print("Registe primeiro o proprietário no menu Gestão de Proprietários.")
             return
 
@@ -424,6 +439,7 @@ def _adicionar_imovel():
             conexao.rollback()
 
         print(f"\nErro ao adicionar o imóvel: {e}")
+        Logs_erros.logs_erro(1008,'Erro de Validacao', 'Erro ao adicionar imovel', pathlogs)
 
     finally:
         # Fechar a ligação à base de dados
@@ -496,6 +512,7 @@ def consultar_imoveis():
     except sqlite3.Error as e:
         # Tratar erros relacionados com a base de dados
         print(f"\nErro ao consultar imóveis: {e}")
+        Logs_erros.logs_erro(1009,'Erro de Validacao', 'Erro ao consultar imoveis', pathlogs)
 
     finally:
         # Fechar a ligação à base de dados, caso tenha sido estabelecida
@@ -544,6 +561,7 @@ def consultar_imoveis_disponiveis():
 
     except sqlite3.Error as e:
         print("\nErro ao verificar imóveis disponiveis.", e)
+        Logs_erros.logs_erro(1010,'Erro de Validacao', 'Erro ao consultar imoveis disponiveis', pathlogs)
         return
 
     finally:
@@ -594,6 +612,7 @@ def consultar_imoveis_alugados():
 
     except sqlite3.Error as e:
         print("\nErro ao verificar imóveis arrendados.", e)
+        Logs_erros.logs_erro(1011,'Erro de Validacao', 'Erro ao consultar imoveis arrendados', pathlogs)
         return
 
     finally:
@@ -733,6 +752,7 @@ def alteracoes_imovel(imovel_id, coluna, novo_valor):
 
     except sqlite3.Error as e:
         print("\nErro ao verificar imóveis disponiveis.", e)
+        Logs_erros.logs_erro(1012,'Erro de Validacao', 'Erro ao consultar imoveis disponiveis', pathlogs)
         return False
     
     finally:
@@ -766,6 +786,7 @@ def selecionar_imovel(filtro = "", permitir_voltar=False):
 
     except sqlite3.Error as e:
         print("\nErro ao verificar imóveis disponiveis.", e)
+        Logs_erros.logs_erro(1012,'Erro de Validacao', 'Erro ao consultar imoveis disponiveis', pathlogs)
         return
     
     finally:
@@ -804,12 +825,14 @@ def fornecer_validar_quartos():
 
             if quartos < 0:
                 print("O número de quartos não pode ser negativo.")
+                Logs_erros.logs_erro(1013,'Erro de Validacao', 'Erro de input do numero de quartos', pathlogs)
                 continue
 
             return quartos
 
         except ValueError:
             print("Introduza um número inteiro válido para os quartos.")
+            Logs_erros.logs_erro(1013,'Erro de Validacao', 'Erro de input do numero de quartos', pathlogs)
 
 #Essa função captura a entrada do utilizador para o valor da renda
 #Utilizada tanto para alteração quanto criação de imóveis
@@ -831,12 +854,14 @@ def fornecer_validar_renda(messagem, permitir_cancelamento=True):
             # Verificar se a renda é positiva e finita, rejeitando valores negativos, zero, infinito e NaN
             if renda <= 0 or not math.isfinite(renda):
                 print("A renda deve ser um valor positivo e finito.")
+                Logs_erros.logs_erro(1014,'Erro de Validacao', 'Valor de renda não aceite', pathlogs)
                 continue
             return renda
 
         except ValueError:
             # Tratar entradas que não podem ser convertidas para números
             print("Introduza um valor numérico válido para a renda.")
+            Logs_erros.logs_erro(1014,'Erro de Validacao', 'Valor de renda não aceite', pathlogs)
 
 #Atribui um inquilino existente num imóvel Disponível
 def atribuir_imovel_inquilino():
@@ -910,6 +935,7 @@ def buscar_inquilino(nif):
         return inquilino
     except:
         print("Erro buscando inquilino")
+        Logs_erros.logs_erro(1015,'Erro de Validacao', 'Erro na procura de inquilino', pathlogs)
         return None
     finally:
         if conexao is not None:

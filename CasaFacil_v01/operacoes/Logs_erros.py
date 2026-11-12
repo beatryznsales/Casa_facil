@@ -11,7 +11,7 @@ def logs_erro (idErro,title, message, filepath):
     msg = '\n'
     msg += 'ID: ' + str(idErro) + '\n'
     msg += 'Titulo: ' + title + '\n'
-    msg += 'Timestamp_1: ' + str(dt) + '\n'
+    msg += 'Timestamp: ' + str(dt) + '\n'
     msg += '\n' 
     msg += 'Mensagem: ' + message + '\n'
     msg += '\n'
