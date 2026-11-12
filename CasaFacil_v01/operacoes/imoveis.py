@@ -540,33 +540,44 @@ def consultar_imoveis():
 
 
 def consultar_imoveis_disponiveis():
-# Estabelecer ligação à base de dados.
-    conexao = sqlite3.connect(base_de_dados)
-    cursor = conexao.cursor()
+    # Consultar os imóveis disponíveis e apresentar os dados das respetivas moradas e proprietários.
+    conexao = None
 
     try:
-        # Consultar apenas os imoveis com status disponível
-        # Para que a informação consultada apareça de forma amigavel, junto dados como nome do proprietário e os detalhes da morada
-        cursor.execute("SELECT imoveis.*, proprietarios.nome_completo, moradas.rua, moradas.num_porta, moradas.num_apartamento, moradas.codigo_postal, moradas.cidade " \
-        "FROM imoveis JOIN moradas ON imoveis.id_morada = moradas.id JOIN proprietarios ON imoveis.nif_proprietario = proprietarios.nif WHERE situacao IN ('Disponível', 'Disponível')")
+        # Estabelecer ligação à base de dados.
+        conexao = sqlite3.connect(base_de_dados)
+        cursor = conexao.cursor()
+
+        # Selecionar explicitamente as colunas para evitar erros nos índices.
+        cursor.execute("""
+            SELECT imoveis.id, imoveis.tipo, imoveis.quartos,
+                   imoveis.estado, imoveis.renda, imoveis.duracao,
+                   proprietarios.nome_completo,
+                   moradas.rua, moradas.num_porta, moradas.num_apartamento,
+                   moradas.codigo_postal, moradas.cidade
+            FROM imoveis
+            JOIN moradas ON imoveis.id_morada = moradas.id
+            JOIN proprietarios ON imoveis.nif_proprietario = proprietarios.nif
+            WHERE imoveis.situacao IN ('Disponível', 'Disponível')
+            ORDER BY imoveis.id
+        """)
         disponiveis = cursor.fetchall()
 
         if len(disponiveis) == 0:
             print("\nNão existem imóveis disponíveis.")
-
         else:
-            # Preparar os dados dos imóveis disponíveis para apresentação em tabela
+            # Preparar os dados dos imóveis disponíveis para apresentação em tabela.
             dados_imoveis = []
 
             for imovel in disponiveis:
-                numero_apartamento = ", " + imovel[12] if imovel[12] else ""
-                morada = f"{imovel[10]}, {imovel[11]}{numero_apartamento}, {imovel[14]}"
+                numero_apartamento = f", {imovel[9]}" if imovel[9] else ""
+                morada = f"{imovel[7]}, {imovel[8]}{numero_apartamento}, {imovel[10]} {imovel[11]}"
 
                 dados_imoveis.append((
-                    imovel[0], imovel[1], imovel[2], imovel[4],
-                    f"{imovel[5]:.2f} €",
-                    imovel[6] if imovel[6] is not None else "Sem contrato",
-                    imovel[9], morada, "[bold green]Disponível[/bold green]"
+                    imovel[0], imovel[1], imovel[2], imovel[3],
+                    f"{imovel[4]:.2f} €",
+                    imovel[5] if imovel[5] is not None else "Sem contrato",
+                    imovel[6], morada, "[bold green]Disponível[/bold green]"
                 ))
 
             mostrar_tabela(
@@ -577,9 +588,8 @@ def consultar_imoveis_disponiveis():
             )
 
     except sqlite3.Error as e:
-        print("\nErro ao verificar imóveis disponiveis.", e)
-        Logs_erros.logs_erro(1010,'Erro de Validacao', 'Erro ao consultar imoveis disponiveis', pathlogs)
-        return
+        print(f"\nErro ao consultar imóveis disponíveis: {e}")
+        Logs_erros.logs_erro(1010, 'Erro de Validacao', 'Erro ao consultar imoveis disponiveis', pathlogs)
 
     finally:
         if conexao is not None:
@@ -589,54 +599,65 @@ def consultar_imoveis_disponiveis():
 
 
 def consultar_imoveis_alugados():
-# Estabelecer ligação à base de dados.
-    conexao = sqlite3.connect(base_de_dados)
-    cursor = conexao.cursor()
+    # Consultar os imóveis arrendados e apresentar os dados dos proprietários, inquilinos e moradas.
+    conexao = None
 
     try:
-        # Consultar apenas os imoveis com status arrendado
-        # Para que a informação consultada apareça de forma amigavel, junto dados como nome do proprietário, inquilino e os detalhes da morada
-        cursor.execute("SELECT imoveis.*, proprietarios.nome_completo, inquilinos.nome_completo, moradas.rua, moradas.num_porta, moradas.num_apartamento, moradas.codigo_postal, moradas.cidade FROM imoveis " \
-        "JOIN moradas ON imoveis.id_morada = moradas.id JOIN proprietarios ON imoveis.nif_proprietario = proprietarios.nif JOIN inquilinos ON imoveis.nif_inquilino = inquilinos.nif WHERE situacao = 'Arrendada'")
+        # Estabelecer ligação à base de dados.
+        conexao = sqlite3.connect(base_de_dados)
+        cursor = conexao.cursor()
+
+        # Selecionar explicitamente as colunas para evitar erros nos índices.
+        cursor.execute("""
+            SELECT imoveis.id, imoveis.tipo, imoveis.quartos,
+                   imoveis.estado, imoveis.renda, imoveis.duracao,
+                   proprietarios.nome_completo, inquilinos.nome_completo,
+                   moradas.rua, moradas.num_porta, moradas.num_apartamento,
+                   moradas.codigo_postal, moradas.cidade
+            FROM imoveis
+            JOIN moradas ON imoveis.id_morada = moradas.id
+            JOIN proprietarios ON imoveis.nif_proprietario = proprietarios.nif
+            JOIN inquilinos ON imoveis.nif_inquilino = inquilinos.nif
+            WHERE imoveis.situacao = 'Arrendada'
+            ORDER BY imoveis.id
+        """)
         arrendados = cursor.fetchall()
 
         if len(arrendados) == 0:
             print("\nNão existem imóveis arrendados.")
-
         else:
-            # Preparar os dados dos imóveis arrendados para apresentação em tabela
+            # Preparar os dados dos imóveis arrendados para apresentação em tabela.
             dados_imoveis = []
 
             for imovel in arrendados:
-                numero_apartamento = ", " + imovel[14] if imovel[14] else ""
-                morada = f"{imovel[12]}, {imovel[13]}{numero_apartamento}, {imovel[16]}"
+                numero_apartamento = f", {imovel[10]}" if imovel[10] else ""
+                morada = f"{imovel[8]}, {imovel[9]}{numero_apartamento}, {imovel[11]} {imovel[12]}"
 
                 dados_imoveis.append((
-                    imovel[0], imovel[1], imovel[2], imovel[4],
-                    f"{imovel[5]:.2f} €",
-                    imovel[6] if imovel[6] is not None else "Sem contrato",
-                    imovel[10], imovel[11], morada,
+                    imovel[0], imovel[1], imovel[2], imovel[3],
+                    f"{imovel[4]:.2f} €",
+                    imovel[5] if imovel[5] is not None else "Sem contrato",
+                    imovel[6], imovel[7], morada,
                     "[bold red]Arrendada[/bold red]"
                 ))
 
             mostrar_tabela(
                 "IMÓVEIS ARRENDADOS",
                 ["ID", "Tipo", "Quartos", "Estado", "Renda",
-                 "Duração", "Proprietário", "Inquilino",
-                 "Morada", "Situação"],
+                 "Duração", "Proprietário", "Inquilino", "Morada", "Situação"],
                 dados_imoveis
             )
 
     except sqlite3.Error as e:
-        print("\nErro ao verificar imóveis arrendados.", e)
-        Logs_erros.logs_erro(1011,'Erro de Validacao', 'Erro ao consultar imoveis arrendados', pathlogs)
-        return
+        print(f"\nErro ao consultar imóveis arrendados: {e}")
+        Logs_erros.logs_erro(1011, 'Erro de Validacao', 'Erro ao consultar imoveis arrendados', pathlogs)
 
     finally:
         if conexao is not None:
             conexao.close()
 
         input("\nPressione Enter para voltar ao menu...")
+
 
 def alterar_dados_imovel():
     # Permitir cancelar a operação através da palavra "voltar"
