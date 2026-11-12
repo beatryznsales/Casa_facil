@@ -93,13 +93,10 @@ def validar_data_nascimento(tipo_pessoa, edicao=False):
             elif idade < 18:
                 print(f"O {tipo_pessoa} deve ter pelo menos 18 anos.")
                 Logs_erros.logs_erro(402,'Data Invalida', 'Idade inferior a 18 anos', pathlogs)
-<<<<<<< Updated upstream
                 continue
 
             elif idade > 123:
                 print("A idade introduzida ultrapassa o limite máximo permitido de 123 anos.")
-=======
->>>>>>> Stashed changes
                 continue
 
             return data_nascimento
