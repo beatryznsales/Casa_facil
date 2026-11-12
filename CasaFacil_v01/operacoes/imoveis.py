@@ -934,7 +934,7 @@ def buscar_inquilino(nif):
         
         return inquilino
     except:
-        print("Erro buscando inquilino")
+        print("Erro na procura de inquilino")
         Logs_erros.logs_erro(1015,'Erro de Validacao', 'Erro na procura de inquilino', pathlogs)
         return None
     finally:
