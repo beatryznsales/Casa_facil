@@ -2,13 +2,10 @@ import os
 import sqlite3
 import math
 import inquirer
-<<<<<<< Updated upstream
 import requests
 import unicodedata
-=======
 import Logs_erros
 pathlogs = 'logs_erros.txt'
->>>>>>> Stashed changes
 
 pasta_programa = os.path.dirname(os.path.abspath(__file__))
 
