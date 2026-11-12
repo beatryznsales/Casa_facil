@@ -4,14 +4,14 @@ import math
 import inquirer
 import requests
 import unicodedata
-import Logs_erros
-pathlogs = 'logs_erros.txt'
+from . import Logs_erros
 
 pasta_programa = os.path.dirname(os.path.abspath(__file__))
 
 # Construir o caminho da base de dados na pasta do programa 
 # os.path.join() junta o caminho da pasta ao nome do ficheiro
 base_de_dados = os.path.join(pasta_programa, "../casa_facil.db")
+pathlogs = os.path.join(pasta_programa, "../logs_erros.txt")
 
 def adicionar_imovel():
     print("\n--- ADICIONAR NOVO IMÓVEL ---")

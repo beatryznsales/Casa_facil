@@ -1,0 +1,21 @@
+
+ID: 701
+Titulo: Operacao cancelada
+Timestamp_1: 2026-11-12 12:14:33.504061
+
+Mensagem: Utilizador cancelou operacao
+
+
+ID: 103
+Titulo: Nome Invalido
+Timestamp_1: 2026-11-12 12:14:43.769360
+
+Mensagem: O nome deve conter pelo menos duas palavras
+
+
+ID: 502
+Titulo: NIF invalido
+Timestamp_1: 2026-11-12 12:15:02.388006
+
+Mensagem: Digito de controlo incorreto
+
