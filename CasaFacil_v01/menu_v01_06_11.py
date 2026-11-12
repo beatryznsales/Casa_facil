@@ -11,7 +11,7 @@ from rich.panel import Panel
 from rich.text import Text
 
 import sys
-sys.path.append(os.path.realpath(".")) # Adicionar o directorio de trabalho ao módulo de procura do python, permitindo importar modulos locais e scripts sem ter de instalar
+sys.path.append(os.path.realpath(".")) # Adicionar o diretorio de trabalho ao módulo de procura do python, permitindo importar modulos locais e scripts sem ter de instalar
 
 
 console = Console() # Inicializar a consola para apresentar os elementos gráficos do rich
@@ -36,7 +36,7 @@ def mostrar_cabecalho(titulo):
     # Criar o nome da aplicação, centrado dentro da moldura
     texto = Text("CASAFÁCIL LDA.", style="bold bright_cyan", justify="center")
 
-    # Criar uma moldura 
+    # Criar uma moldura
     painel = Panel(
         texto,
         title=" SISTEMA DE GESTÃO IMOBILIÁRIA ",
@@ -50,7 +50,7 @@ def mostrar_cabecalho(titulo):
     console.print()
     console.print(painel)
 
-    # Apresentar o título do menu 
+    # Apresentar o título do menu
     console.print(f"\n{titulo}", style="bold bright_cyan")
 
     # Apresentar as instruções de navegação e uma linha separadora
@@ -68,7 +68,7 @@ def menu_principal():
     # Permite escolher entre a gestão de imóveis, inquilinos e proprietários, ou sair da aplicação
 
     while True:
-        
+
         # Limpar o terminal sempre que o menu é apresentado
         os.system("cls" if os.name == "nt" else "clear")
 
@@ -117,6 +117,7 @@ def menu_imoveis():
 
     while True:
 
+        # Limpar o terminal sempre que o menu é apresentado
         os.system("cls" if os.name == "nt" else "clear")
 
         mostrar_cabecalho("🏠︎ GESTÃO DE IMÓVEIS")
@@ -137,6 +138,7 @@ def menu_imoveis():
 
         if opcao == "1":
             adicionar_imovel()
+            input("\nPressione Enter para voltar ao menu de imóveis...")
 
         elif opcao == "2":
             consultar_imoveis()
@@ -149,12 +151,15 @@ def menu_imoveis():
 
         elif opcao == "5":
             alterar_dados_imovel()
+            input("\nPressione Enter para voltar ao menu de imóveis...")
 
         elif opcao == "6":
             atribuir_imovel_inquilino()
+            input("\nPressione Enter para voltar ao menu de imóveis...")
 
         elif opcao == "7":
             encerrar_contrato_arrendamento()
+            input("\nPressione Enter para voltar ao menu de imóveis...")
 
         elif opcao == "0":
             break
@@ -172,6 +177,7 @@ def menu_proprietarios():
 
     while True:
 
+        # Limpar o terminal sempre que o menu é apresentado
         os.system("cls" if os.name == "nt" else "clear")
 
         mostrar_cabecalho("𖨆 GESTÃO DE PROPRIETÁRIOS")
@@ -191,15 +197,18 @@ def menu_proprietarios():
 
         if opcao == "1":
             adicionar_proprietario()
+            input("\nPressione Enter para voltar ao menu de proprietários...")
 
         elif opcao == "2":
             consultar_proprietarios()
 
         elif opcao == "3":
             editar_proprietarios()
+            input("\nPressione Enter para voltar ao menu de proprietários...")
 
         elif opcao == "4":
             eliminar_proprietarios()
+            input("\nPressione Enter para voltar ao menu de proprietários...")
 
         elif opcao == "0":
             break
@@ -211,6 +220,7 @@ def menu_inquilinos():
 
     while True:
 
+        # Limpar o terminal sempre que o menu é apresentado
         os.system("cls" if os.name == "nt" else "clear")
 
         mostrar_cabecalho("𖨆𖨆 GESTÃO DE INQUILINOS")
@@ -230,15 +240,18 @@ def menu_inquilinos():
 
         if opcao == "1":
             adicionar_inquilino()
+            input("\nPressione Enter para voltar ao menu de inquilinos...")
 
         elif opcao == "2":
             consultar_inquilinos()
 
         elif opcao == "3":
             editar_inquilinos()
+            input("\nPressione Enter para voltar ao menu de inquilinos...")
 
         elif opcao == "4":
             eliminar_inquilinos()
+            input("\nPressione Enter para voltar ao menu de inquilinos...")
 
         elif opcao == "0":
             break

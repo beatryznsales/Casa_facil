@@ -138,3 +138,17 @@ Timestamp: 2026-11-12 18:53:00.141166
 
 Mensagem: Erro ao adicionar imovel
 
+
+ID: 1001
+Titulo: Erro de Validacao
+Timestamp: 2026-11-12 19:00:30.005693
+
+Mensagem: Dados de cidade e codigo postal nao correspondentes
+
+
+ID: 1016
+Titulo: Erro de Validacao
+Timestamp: 2026-11-12 19:01:17.714869
+
+Mensagem: Duracao do contrato invalida
+

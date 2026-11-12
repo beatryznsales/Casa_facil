@@ -388,6 +388,23 @@ def _adicionar_imovel():
 
     renda = fornecer_validar_renda("Valor mensal da renda (€): ")
 
+    # Recolher e validar a duração prevista do contrato de arrendamento (em meses).
+    while True:
+        valor_duracao = pedir_input("Duração prevista do contrato de arrendamento (meses): ")
+
+        if not valor_duracao.isascii() or not valor_duracao.isdigit():
+            print("A duração deve ser um número inteiro de meses.")
+            Logs_erros.logs_erro(1016, 'Erro de Validacao', 'Duracao do contrato invalida', pathlogs)
+            continue
+
+        duracao = int(valor_duracao)
+
+        if duracao <= 0:
+            print("A duração deve ser superior a zero meses.")
+            Logs_erros.logs_erro(1016, 'Erro de Validacao', 'Duracao do contrato invalida', pathlogs)
+            continue
+
+        break
 
     # Definir automaticamente a situação inicial do imóvel
     situacao = "Disponível"
@@ -417,7 +434,7 @@ def _adicionar_imovel():
         id_morada = cursor.lastrowid
 
         # Inserir o imóvel e associá-lo à morada e ao proprietário
-        cursor.execute("INSERT INTO imoveis (tipo, quartos, id_morada, estado, renda, situacao, nif_proprietario) VALUES (?, ?, ?, ?, ?, ?, ?)", (tipo, quartos, id_morada, estado, renda, situacao, int(nif_proprietario)))
+        cursor.execute("INSERT INTO imoveis (tipo, quartos, id_morada, estado, renda, duracao, situacao, nif_proprietario) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (tipo, quartos, id_morada, estado, renda, duracao, situacao, int(nif_proprietario)))
 
         # Atualizar o número de habitações registadas pelo proprietário
         # Com UPDATE proprietarios atualizar o numero de habitações na coluna identificada por SET
