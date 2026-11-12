@@ -122,7 +122,7 @@ def _adicionar_imovel():
 
             elif len(num_porta) > 5:
                 print("O número da porta não pode ultrapassar 5 caracteres.")
-                Logs_erros.logs_erro(909,'Campo invalido', 'Campo: número da porta - excesso de caracteres', pathlogs)
+                Logs_erros.logs_erro(909,'Campo invalido', 'Campo: numero da porta - excesso de caracteres', pathlogs)
 
             elif (num_porta.isascii() and num_porta.isdigit() and int(num_porta) > 0):
                 break
@@ -132,7 +132,7 @@ def _adicionar_imovel():
 
             else:
                 print("Número da porta inválido. Exemplos de números de porta: 25 ou 25A")
-                Logs_erros.logs_erro(909,'Campo invalido', 'Campo: número da porta - fora das regras estabelecidas', pathlogs)
+                Logs_erros.logs_erro(909,'Campo invalido', 'Campo: numero da porta - fora das regras estabelecidas', pathlogs)
 
         # Identificar números presentes no nome da rua
         numeros_rua = []
@@ -168,7 +168,7 @@ def _adicionar_imovel():
         # Pedir confirmação quando existe uma possível repetição
         if numero_repetido:
             print("\nAtenção: O número da porta também aparece no nome da rua.")
-            Logs_erros.logs_erro(910,'Campo invalido', 'Informação duplicada', pathlogs)
+            Logs_erros.logs_erro(910,'Campo invalido', 'Informacao duplicada', pathlogs)
             print("\n")
 
             while True:
@@ -226,19 +226,19 @@ def _adicionar_imovel():
 
                 if len(partes) != 2:
                     print("Código postal inválido. Utilize o formato 1234-567.")
-                    Logs_erros.logs_erro(915,'Campo invalido', 'Formato de Código Postal', pathlogs)
+                    Logs_erros.logs_erro(915,'Campo invalido', 'Formato de Codigo Postal', pathlogs)
 
                 elif not (partes[0].isascii() and partes[1].isascii() and partes[0].isdigit() and partes[1].isdigit()):
                     print("O código postal deve conter apenas números e um hífen.")
-                    Logs_erros.logs_erro(915,'Campo invalido', 'Formato de Código Postal', pathlogs)
+                    Logs_erros.logs_erro(915,'Campo invalido', 'Formato de Codigo Postal', pathlogs)
 
                 elif len(partes[0]) != 4 or len(partes[1]) != 3:
                     print("Código postal inválido. Utilize o formato 1234-567.")
-                    Logs_erros.logs_erro(915,'Campo invalido', 'Formato de Código Postal', pathlogs)
+                    Logs_erros.logs_erro(915,'Campo invalido', 'Formato de Codigo Postal', pathlogs)
 
                 elif partes[0][0] == "0":
                     print("O código postal não pode começar por zero.")
-                    Logs_erros.logs_erro(915,'Campo invalido', 'Formato de Código Postal', pathlogs)
+                    Logs_erros.logs_erro(915,'Campo invalido', 'Formato de Codigo Postal', pathlogs)
 
                 else:
                     break
@@ -295,12 +295,12 @@ def _adicionar_imovel():
 
             elif resposta.status_code == 404:
                 print("\nAtenção: código postal não encontrado na API. Confirme os dados introduzidos.")
-                Logs_erros.logs_erro(1002,'Erro de Validacao', 'Ccdigo postal inexistente', pathlogs)
+                Logs_erros.logs_erro(1002,'Erro de Validacao', 'Codigo postal inexistente', pathlogs)
                 divergencia = True
 
             else:
                 print("\nNão foi possível validar o código postal online. O registo vai continuar.")
-                Logs_erros.logs_erro(1003,'Erro de Validacao', 'Codigo postal não foi validado online', pathlogs)
+                Logs_erros.logs_erro(1003,'Erro de Validacao', 'Codigo postal nao foi validado online', pathlogs)
 
         except (requests.RequestException, ValueError, TypeError, KeyError):
             # Falha de Internet, do serviço ou da resposta: não bloquear o registo do imóvel
@@ -873,14 +873,14 @@ def fornecer_validar_renda(messagem, permitir_cancelamento=True):
             # Verificar se a renda é finita e está entre os limites definidos para o projeto.
             if not math.isfinite(renda) or renda < 50 or renda > 20000:
                 print("A renda mensal deve estar entre 50 € e 20 000 €.")
-                Logs_erros.logs_erro(1014,'Erro de Validacao', 'Valor de renda não aceite', pathlogs)
+                Logs_erros.logs_erro(1014,'Erro de Validacao', 'Valor de renda nao aceite', pathlogs)
                 continue
             return renda
 
         except ValueError:
             # Tratar entradas que não podem ser convertidas para números
             print("Introduza um valor numérico válido para a renda.")
-            Logs_erros.logs_erro(1014,'Erro de Validacao', 'Valor de renda não aceite', pathlogs)
+            Logs_erros.logs_erro(1014,'Erro de Validacao', 'Valor de renda nao aceite', pathlogs)
 
 #Atribui um inquilino existente num imóvel Disponível
 def atribuir_imovel_inquilino():
