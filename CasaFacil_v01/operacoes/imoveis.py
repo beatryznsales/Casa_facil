@@ -1,9 +1,9 @@
-import phonenumbers
-import datetime
 import os
 import sqlite3
 import math
 import inquirer
+import requests
+import unicodedata
 
 pasta_programa = os.path.dirname(os.path.abspath(__file__))
 
@@ -183,45 +183,124 @@ def adicionar_imovel():
         else:
             break
 
-    # Validar o código postal português
+    # Permitir corrigir o código postal e/ou a cidade caso a API encontre diferenças
+    alterar_codigo_postal = True
+    alterar_cidade = True
+
     while True:
-        codigo_postal = input("Código postal (1234-567): ").strip()
+        if alterar_codigo_postal:
+            # Validar o código postal português
+            while True:
+                codigo_postal = input("Código postal (1234-567): ").strip()
 
-        partes = codigo_postal.split("-")
+                partes = codigo_postal.split("-")
 
-        if len(partes) != 2:
-            print("Código postal inválido. Utilize o formato 1234-567.")
+                if len(partes) != 2:
+                    print("Código postal inválido. Utilize o formato 1234-567.")
 
-        elif not (partes[0].isascii() and partes[1].isascii() and partes[0].isdigit() and partes[1].isdigit()):
-            print("O código postal deve conter apenas números e um hífen.")
+                elif not (partes[0].isascii() and partes[1].isascii() and partes[0].isdigit() and partes[1].isdigit()):
+                    print("O código postal deve conter apenas números e um hífen.")
 
-        elif len(partes[0]) != 4 or len(partes[1]) != 3:
-            print("Código postal inválido. Utilize o formato 1234-567.")
+                elif len(partes[0]) != 4 or len(partes[1]) != 3:
+                    print("Código postal inválido. Utilize o formato 1234-567.")
 
-        elif partes[0][0] == "0":
-            print("O código postal não pode começar por zero.")
+                elif partes[0][0] == "0":
+                    print("O código postal não pode começar por zero.")
 
-        else:
-            break
+                else:
+                    break
 
-    # Validar o nome da cidade  -> podemos adicionar uma API que compara a cidade ao codigo postal? 
-    while True:
-        cidade = input("Cidade: ").strip()
+        if alterar_cidade:
+            # Validar o nome da cidade  
+            while True:
+                cidade = input("Cidade: ").strip()
 
-        if cidade == "":
-            print("A cidade não pode estar vazia.")
+                if cidade == "":
+                    print("A cidade não pode estar vazia.")
 
-        elif len(cidade) > 100:
-            print("O nome da cidade não pode ultrapassar 100 caracteres.")
+                elif len(cidade) > 100:
+                    print("O nome da cidade não pode ultrapassar 100 caracteres.")
 
-        elif not all(caracter.isalpha() or caracter in " '-" for caracter in cidade):
-            print("A cidade deve conter apenas letras, espaços, hífenes ou apóstrofos.")
+                elif not all(caracter.isalpha() or caracter in " '-" for caracter in cidade):
+                    print("A cidade deve conter apenas letras, espaços, hífenes ou apóstrofos.")
 
-        elif not any(caracter.isalpha() for caracter in cidade):
-            print("A cidade deve conter letras.")
+                elif not any(caracter.isalpha() for caracter in cidade):
+                    print("A cidade deve conter letras.")
 
-        else:
-            break
+                else:
+                    break
+
+        divergencia = False
+
+        # Consultar a GEO API PT para verificar o código postal e a cidade (validação complementar)
+        # Se a API estiver indisponível, o registo continua com as validações locais anteriores
+        try:
+            resposta = requests.get(f"https://json.geoapi.pt/cp/{codigo_postal}", timeout=3)
+
+            if resposta.status_code == 200:
+                dados = resposta.json()
+
+                # A designação postal, a localidade e o concelho podem ter nomes diferentes
+                cidades_api = [dados.get("Designação Postal", ""), dados.get("Localidade", ""), dados.get("Concelho", "")]
+
+                # Retirar os acentos e ignorar diferenças entre maiúsculas e minúsculas
+                cidade_introduzida = "".join(caracter for caracter in unicodedata.normalize("NFD", cidade.casefold()) if not unicodedata.combining(caracter))
+                cidades_normalizadas = ["".join(caracter for caracter in unicodedata.normalize("NFD", nome.casefold()) if not unicodedata.combining(caracter)) for nome in cidades_api if isinstance(nome, str) and nome]
+
+                if cidade_introduzida in cidades_normalizadas:
+                    print("Código postal e cidade confirmados pela API.")
+                else:
+                    print("\nAtenção: a cidade não corresponde ao código postal introduzido.")
+                    print("Verifique o código postal e a cidade antes de continuar.")
+                    print("Dados encontrados:", ", ".join(nome for nome in cidades_api if nome))
+                    divergencia = True
+
+            elif resposta.status_code == 404:
+                print("\nAtenção: código postal não encontrado na API. Confirme os dados introduzidos.")
+                divergencia = True
+
+            else:
+                print("\nNão foi possível validar o código postal online. O registo vai continuar.")
+
+        except (requests.RequestException, ValueError, TypeError, KeyError):
+            # Falha de Internet, do serviço ou da resposta: não bloquear o registo do imóvel
+            print("\nValidação online indisponível. O registo vai continuar normalmente.")
+
+        # Se a API detetar uma diferença, permitir corrigir os dados antes de continuar
+        if divergencia:
+            confirmacao = [inquirer.List("confirmar",
+                    message="Deseja alterar o código postal ou a cidade?",
+                    choices=["Sim", "Não"],
+                    default="Sim")
+            ]
+
+            resposta = inquirer.prompt(confirmacao)
+
+            # Se não pretender corrigir, manter os dados introduzidos
+            if resposta is None or resposta["confirmar"] == "Não":
+                print("\nOs dados introduzidos serão mantidos.")
+                break
+
+            # Escolher quais os dados que pretende corrigir
+            menu = [inquirer.List("campo",
+                    message="Que dados pretende alterar?",
+                    choices=["Código postal", "Cidade", "Código postal e cidade"])
+            ]
+
+            escolha = inquirer.prompt(menu)
+
+            if escolha is None:
+                print("\nOs dados introduzidos serão mantidos.")
+                break
+
+            alterar_codigo_postal = escolha["campo"] in ["Código postal", "Código postal e cidade"]
+            alterar_cidade = escolha["campo"] in ["Cidade", "Código postal e cidade"]
+
+            # Voltar a validar apenas os dados escolhidos e consultar novamente a API
+            continue
+
+        # Continuar o registo se a API confirmar os dados ou estiver indisponível
+        break
 
     # Recolher e validar os dados do imóvel
     print("\nIndique os dados do imóvel:")
@@ -720,4 +799,3 @@ def encerrar_contrato_arrendamento():
         #Fechar a conexão
         if conexao is not None:
             conexao.close()
-
