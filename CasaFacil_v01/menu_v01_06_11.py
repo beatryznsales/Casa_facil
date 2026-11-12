@@ -1,7 +1,4 @@
 
-## Adicionar erros LOG
-##  Colocar opção de saida (0)
-## Fazer as tabelas 
 # Para phonenumbers, inquirer e rich e todos os imports, deve-se preparar um ficheiro requirements.txt para facilitar a instalação dessas dependências nos computadores externos
 
 import os
@@ -67,15 +64,13 @@ def mostrar_cabecalho(titulo):
 
 def menu_principal():
 
-    # Menu principal da aplicação - o utilizador fica no menu principal até escolher a opção de sair da aplicação.
-    # Permite escolher entre a gestão de imóveis, inquilinos e proprietários, ou sair da aplicação.
-
-    if os.name == "nt":   # Limpar o terminal de forma compatível com diferentes sistemas operativos
-        os.system("cls")
-    else:
-        os.system("clear")
+    # Menu principal da aplicação - o utilizador fica no menu principal até escolher a opção de sair da aplicação
+    # Permite escolher entre a gestão de imóveis, inquilinos e proprietários, ou sair da aplicação
 
     while True:
+        
+        # Limpar o terminal sempre que o menu é apresentado
+        os.system("cls" if os.name == "nt" else "clear")
 
         mostrar_cabecalho("⫶☰  MENU PRINCIPAL")
 
@@ -120,12 +115,9 @@ def menu_principal():
 
 def menu_imoveis():
 
-    if os.name == "nt":
-        os.system("cls")
-    else:
-        os.system("clear")
-
     while True:
+
+        os.system("cls" if os.name == "nt" else "clear")
 
         mostrar_cabecalho("🏠︎ GESTÃO DE IMÓVEIS")
 
@@ -178,12 +170,9 @@ def menu_imoveis():
 
 def menu_proprietarios():
 
-    if os.name == "nt":
-        os.system("cls")
-    else:
-        os.system("clear")
-
     while True:
+
+        os.system("cls" if os.name == "nt" else "clear")
 
         mostrar_cabecalho("𖨆 GESTÃO DE PROPRIETÁRIOS")
 
@@ -220,12 +209,9 @@ def menu_proprietarios():
 
 def menu_inquilinos():
 
-    if os.name == "nt":
-        os.system("cls")
-    else:
-        os.system("clear")
-
     while True:
+
+        os.system("cls" if os.name == "nt" else "clear")
 
         mostrar_cabecalho("𖨆𖨆 GESTÃO DE INQUILINOS")
 
