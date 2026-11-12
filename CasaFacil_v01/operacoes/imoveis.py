@@ -5,6 +5,7 @@ import inquirer
 import requests
 import unicodedata
 from . import Logs_erros
+from .tabelas import mostrar_tabela 
 
 pasta_programa = os.path.dirname(os.path.abspath(__file__))
 
@@ -453,29 +454,35 @@ def consultar_imoveis():
             print("\nNão existem imóveis registados.")
 
         else:
-            print("\n--- LISTA DE IMÓVEIS ---")
+            # Preparar os dados dos imóveis para apresentação em tabela
+            dados_imoveis = []
 
-            # Percorrer os imóveis encontrados e apresentar os seus dados
             for imovel in imoveis:
-                print("\n" + "-" * 40)
-                print(f"ID: {imovel[0]}")
-                print(f"Tipo: {imovel[1]}")
-                print(f"Número de quartos: {imovel[2]}")
-                print(f"Estado: {imovel[3]}")
-                print(f"Renda mensal: {imovel[4]:.2f} €")
-                print(f"Duração do contrato: {imovel[5] if imovel[5] is not None else 'Sem contrato'}")
-                print(f"Situação: {imovel[6]}")
-                print(f"NIF do proprietário: {imovel[7]}")
+                # Reunir os dados da morada numa única coluna
+                andar = f", {imovel[10]}" if imovel[10] else ""
+                morada = f"{imovel[8]}, {imovel[9]}{andar}, {imovel[11]} {imovel[12]}"
 
-                # Apresentar os dados da morada
-                print(f"Rua: {imovel[8]}")
-                print(f"Número da porta: {imovel[9]}")
-                print(f"Andar/Fração: {imovel[10] if imovel[10] else 'Não aplicável'}")
-                print(f"Código postal: {imovel[11]}")
-                print(f"Cidade: {imovel[12]}")
+                # Destacar a situação do imóvel a verde ou vermelho
+                situacao = unicodedata.normalize("NFC", imovel[6])
+                if situacao == "Disponível":
+                    situacao = "[bold green]Disponível[/bold green]"
+                elif situacao == "Arrendada":
+                    situacao = "[bold red]Arrendada[/bold red]"
 
-                # Apresentar o nome do proprietário
-                print(f"Nome do proprietário: {imovel[13]}")
+                dados_imoveis.append((
+                    imovel[0], imovel[1], imovel[2], imovel[3],
+                    f"{imovel[4]:.2f} €",
+                    imovel[5] if imovel[5] is not None else "Sem contrato",
+                    situacao, imovel[7], morada, imovel[13]
+                ))
+
+            mostrar_tabela(
+                "IMÓVEIS REGISTADOS",
+                ["ID", "Tipo", "Quartos", "Estado", "Renda Mensal",
+                 "Duração", "Situação", "NIF proprietário",
+                 "Morada", "Proprietário"],
+                dados_imoveis
+            )
 
     except sqlite3.Error as e:
         # Tratar erros relacionados com a base de dados
@@ -488,83 +495,102 @@ def consultar_imoveis():
 
         input("\nPressione Enter para voltar ao menu...")
 
+
 def consultar_imoveis_disponiveis():
 # Estabelecer ligação à base de dados.
     conexao = sqlite3.connect(base_de_dados)
     cursor = conexao.cursor()
-    
+
     try:
         # Consultar apenas os imoveis com status disponível
         # Para que a informação consultada apareça de forma amigavel, junto dados como nome do proprietário e os detalhes da morada
         cursor.execute("SELECT imoveis.*, proprietarios.nome_completo, moradas.rua, moradas.num_porta, moradas.num_apartamento, moradas.codigo_postal, moradas.cidade " \
-        "FROM imoveis JOIN moradas ON imoveis.id_morada = moradas.id JOIN proprietarios ON imoveis.nif_proprietario = proprietarios.nif WHERE situacao = 'Disponível'")
+        "FROM imoveis JOIN moradas ON imoveis.id_morada = moradas.id JOIN proprietarios ON imoveis.nif_proprietario = proprietarios.nif WHERE situacao IN ('Disponível', 'Disponível')")
         disponiveis = cursor.fetchall()
-        print("\n--- LISTA DE IMOVEIS DISPONÍVEIS ---")
-        
-        for imovel in disponiveis:
 
-            numero_apartamento = ""  #Como em algumas moradas o número de apartamento ser vazio, utilizo do recurso de impor uma condição para que os número vazios não apareçam no print
-            if imovel[12]:
-                numero_apartamento = ", "+imovel[12] 
+        if len(disponiveis) == 0:
+            print("\nNão existem imóveis disponíveis.")
 
-            print("\n" + "-" * 40)
-            print(f"ID: {imovel[0]}")
-            print(f"Tipo: {imovel[1]}")
-            print(f"Quartos: {imovel[2]}")
-            print(f"Estado do imóvel: {imovel[4]}")
-            print(f"Valor da renda: {imovel[5]}€")
-            print(f"Duração do contrato: {imovel[6]}")
-            print(f"Nome do proprietário: {imovel[9]}")
-            print(f"Morada: {imovel[10]}, {imovel[11]}{numero_apartamento}, {imovel[14]}") #Não apresento a morada completa para que a informação seja apenas a essencial para consulta
-            
+        else:
+            # Preparar os dados dos imóveis disponíveis para apresentação em tabela
+            dados_imoveis = []
+
+            for imovel in disponiveis:
+                numero_apartamento = ", " + imovel[12] if imovel[12] else ""
+                morada = f"{imovel[10]}, {imovel[11]}{numero_apartamento}, {imovel[14]}"
+
+                dados_imoveis.append((
+                    imovel[0], imovel[1], imovel[2], imovel[4],
+                    f"{imovel[5]:.2f} €",
+                    imovel[6] if imovel[6] is not None else "Sem contrato",
+                    imovel[9], morada, "[bold green]Disponível[/bold green]"
+                ))
+
+            mostrar_tabela(
+                "IMÓVEIS DISPONÍVEIS",
+                ["ID", "Tipo", "Quartos", "Estado", "Renda",
+                 "Duração", "Proprietário", "Morada", "Situação"],
+                dados_imoveis
+            )
+
     except sqlite3.Error as e:
         print("\nErro ao verificar imóveis disponiveis.", e)
         return
-    
+
     finally:
         if conexao is not None:
             conexao.close()
 
         input("\nPressione Enter para voltar ao menu...")
 
+
 def consultar_imoveis_alugados():
 # Estabelecer ligação à base de dados.
     conexao = sqlite3.connect(base_de_dados)
     cursor = conexao.cursor()
-    
+
     try:
         # Consultar apenas os imoveis com status arrendado
         # Para que a informação consultada apareça de forma amigavel, junto dados como nome do proprietário, inquilino e os detalhes da morada
         cursor.execute("SELECT imoveis.*, proprietarios.nome_completo, inquilinos.nome_completo, moradas.rua, moradas.num_porta, moradas.num_apartamento, moradas.codigo_postal, moradas.cidade FROM imoveis " \
         "JOIN moradas ON imoveis.id_morada = moradas.id JOIN proprietarios ON imoveis.nif_proprietario = proprietarios.nif JOIN inquilinos ON imoveis.nif_inquilino = inquilinos.nif WHERE situacao = 'Arrendada'")
         arrendados = cursor.fetchall()
-        print("\n--- LISTA DE IMOVEIS ARRENDADOS ---")
-        
-        for imovel in arrendados:
 
-            numero_apartamento = ""  #Como em algumas moradas o número de apartamento ser vazio, utilizo do recurso de impor uma condição para que os número vazios não apareçam no print
-            if imovel[14]:
-                numero_apartamento = ", "+imovel[14] 
+        if len(arrendados) == 0:
+            print("\nNão existem imóveis arrendados.")
 
-            print("\n" + "-" * 40)
-            print(f"ID: {imovel[0]}")
-            print(f"Tipo: {imovel[1]}")
-            print(f"Quartos: {imovel[2]}")
-            print(f"Estado do imóvel: {imovel[4]}")
-            print(f"Valor da renda: {imovel[5]}€")
-            print(f"Duração do contrato: {imovel[6]}")
-            print(f"Nome do proprietário: {imovel[10]}")
-            print(f"Nome do inquilino: {imovel[11]}")
-            print(f"Morada: {imovel[12]}, {imovel[13]}{numero_apartamento}, {imovel[16]}") #Não apresento a morada completa para que a informação seja apenas a essencial para consulta
-            
+        else:
+            # Preparar os dados dos imóveis arrendados para apresentação em tabela
+            dados_imoveis = []
+
+            for imovel in arrendados:
+                numero_apartamento = ", " + imovel[14] if imovel[14] else ""
+                morada = f"{imovel[12]}, {imovel[13]}{numero_apartamento}, {imovel[16]}"
+
+                dados_imoveis.append((
+                    imovel[0], imovel[1], imovel[2], imovel[4],
+                    f"{imovel[5]:.2f} €",
+                    imovel[6] if imovel[6] is not None else "Sem contrato",
+                    imovel[10], imovel[11], morada,
+                    "[bold red]Arrendada[/bold red]"
+                ))
+
+            mostrar_tabela(
+                "IMÓVEIS ARRENDADOS",
+                ["ID", "Tipo", "Quartos", "Estado", "Renda",
+                 "Duração", "Proprietário", "Inquilino",
+                 "Morada", "Situação"],
+                dados_imoveis
+            )
+
     except sqlite3.Error as e:
         print("\nErro ao verificar imóveis arrendados.", e)
         return
-    
+
     finally:
         if conexao is not None:
             conexao.close()
-        
+
         input("\nPressione Enter para voltar ao menu...")
 
 def alterar_dados_imovel ():

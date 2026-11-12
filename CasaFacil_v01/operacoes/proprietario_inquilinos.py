@@ -5,6 +5,7 @@ import sqlite3
 import math
 import inquirer
 from . import Logs_erros
+from .tabelas import mostrar_tabela 
 
 pasta_programa = os.path.dirname(os.path.abspath(__file__))
 
@@ -423,17 +424,11 @@ def consultar_proprietarios():
             print("\nNão existem proprietários registados.")
 
         else:
-            print("\n--- LISTA DE PROPRIETÁRIOS ---")
-
-            for proprietario in proprietarios:
-                print("\n" + "-" * 40)
-                print(f"NIF: {proprietario[0]}")
-                print(f"Nome: {proprietario[1]}")
-                print(f"Data de nascimento: {proprietario[2]}")
-                print(f"Sexo: {proprietario[3]}")
-                print(f"Telemóvel: {proprietario[4]}")
-                print(f"Email: {proprietario[5]}")
-                print(f"Número de habitações: {proprietario[6]}")
+            mostrar_tabela(
+                "PROPRIETÁRIOS REGISTADOS",
+                ["NIF", "Nome", "Data de nascimento", "Sexo", "Contacto telefónico", "Email", "N.º de habitações"],
+                proprietarios
+            )
 
     except sqlite3.Error as e:
         print(f"\nErro ao consultar proprietários: {e}")
@@ -750,17 +745,16 @@ def consultar_inquilinos():
             print("\nNão existem inquilinos registados.")
 
         else:
-            print("\n--- LISTA DE INQUILINOS ---")
-
+            # Formatar o ordenado mensal com duas casas decimais, tal como anteriormente.
+            dados_inquilinos = []
             for inquilino in inquilinos:
-                print("\n" + "-" * 40)
-                print(f"NIF: {inquilino[0]}")
-                print(f"Nome: {inquilino[1]}")
-                print(f"Data de nascimento: {inquilino[2]}")
-                print(f"Sexo: {inquilino[3]}")
-                print(f"Telemóvel: {inquilino[4]}")
-                print(f"Email: {inquilino[5]}")
-                print(f"Ordenado mensal: {inquilino[6]:.2f} €")
+                dados_inquilinos.append((*inquilino[:6], f"{inquilino[6]:.2f} €"))
+
+            mostrar_tabela(
+                "INQUILINOS REGISTADOS",
+                ["NIF", "Nome", "Data de nascimento", "Sexo", "Contacto telefónico", "Email", "Ordenado mensal"],
+                dados_inquilinos
+            )
 
     except sqlite3.Error as e:
         print(f"\nErro ao consultar inquilinos: {e}")

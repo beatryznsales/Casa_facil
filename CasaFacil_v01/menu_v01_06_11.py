@@ -1,27 +1,23 @@
 
-## inquirer
-#### Adicionar uma contagem para que sempre que um imovel seja adicionado, o proprietario ganhe +1 no numero de imoveis que este tenha
-#### validar todos os inputs pedidos pelo código
-### Colocar o os.system() para limpar o terminal
-## Editar informações: Permitir editar os dados das tabelas para as 3 entidades
 ## Adicionar erros LOG
-
-# Para phonenumbers, inquirer e rich, deve-se preparar um ficheiro requirements.txt para facilitar a instalação dessas dependências nos computadores externos
+##  Colocar opção de saida (0)
+## Fazer as tabelas 
+# Para phonenumbers, inquirer e rich e todos os imports, deve-se preparar um ficheiro requirements.txt para facilitar a instalação dessas dependências nos computadores externos
 
 import os
 from operacoes.imoveis import *
 from operacoes.proprietario_inquilinos import *
-import inquirer
-import sys
+import inquirer # O módulo inquirer facilita a criação de listas de opções, prompts e outros elementos de interface de linha de comando.
 
-from rich.console import Console
+from rich.console import Console  # Utilizar rich em conjunto com o inquirer para personalizar o menu
 from rich.panel import Panel
 from rich.text import Text
 
-sys.path.append(os.path.realpath(".")) # adiciona o directorio de trabalho ao módulo de procura do python, permitindo importar modulos locais e scripts sem ter de instalar
+import sys
+sys.path.append(os.path.realpath(".")) # Adicionar o directorio de trabalho ao módulo de procura do python, permitindo importar modulos locais e scripts sem ter de instalar
 
-# Inicializar a consola para apresentar os elementos gráficos do Rich
-console = Console()
+
+console = Console() # Inicializar a consola para apresentar os elementos gráficos do rich
 
 # Obter o caminho completo da pasta onde o programa está guardado
 
@@ -43,7 +39,7 @@ def mostrar_cabecalho(titulo):
     # Criar o nome da aplicação, centrado dentro da moldura
     texto = Text("CASAFÁCIL LDA.", style="bold bright_cyan", justify="center")
 
-    # Criar uma moldura mais compacta e ligeiramente mais larga
+    # Criar uma moldura 
     painel = Panel(
         texto,
         title=" SISTEMA DE GESTÃO IMOBILIÁRIA ",
@@ -118,10 +114,6 @@ def menu_principal():
 
         else:
             print("Opção inválida! Escolha um número entre 0 e 3.")
-
-
-# Módulo inquirer - aplicado para criar menus interativos no terminal, permitindo ao utilizador escolher opções de forma mais intuitiva e visualmente agradável.
-# O módulo inquirer facilita a criação de listas de opções, prompts e outros elementos de interface de linha de comando.
 
 
 #####################################     MENU DOS IMÓVEIS     ############################################################################################################################
