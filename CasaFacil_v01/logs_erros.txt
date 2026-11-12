@@ -320,3 +320,17 @@ Timestamp: 2026-11-12 20:21:43.274116
 
 Mensagem: Dados de cidade e codigo postal nao correspondentes
 
+
+ID: 1014
+Titulo: Erro de Validacao
+Timestamp: 2026-11-12 23:17:17.457106
+
+Mensagem: Valor de renda nao aceite
+
+
+ID: 1014
+Titulo: Erro de Validacao
+Timestamp: 2026-11-12 23:17:27.936046
+
+Mensagem: Valor de renda nao aceite
+
